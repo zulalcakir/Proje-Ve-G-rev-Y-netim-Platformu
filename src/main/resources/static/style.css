@@ -1,0 +1,130 @@
+/* --- GENEL AYARLAR --- */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    background-color: #0f0c29; /* Koyu lacivert/mor alt ton */
+    overflow: hidden;
+    color: #fff;
+}
+
+/* --- ARKADAKİ NEON RENK KÜRELERİ --- */
+.color-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    animation: float 10s infinite ease-in-out alternate;
+}
+
+.blob-1 {
+    width: 300px; height: 300px;
+    background: #ff007f; /* Neon pembe */
+    top: -50px; left: -50px;
+}
+
+.blob-2 {
+    width: 400px; height: 400px;
+    background: #7928ca; /* Mor */
+    bottom: -100px; right: -100px;
+    animation-delay: -3s;
+}
+
+.blob-3 {
+    width: 250px; height: 250px;
+    background: #00d2ff; /* Camgöbeği/Mavi */
+    top: 40%; left: 50%;
+    animation-delay: -5s;
+}
+
+/* Kürelerin yavaşça hareket etme efekti */
+@keyframes float {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(30px) scale(1.1); }
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* --- BUZLU CAM (GLASSMORPHISM) KARTI --- */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05); /* Çok hafif beyaz saydamlık */
+    backdrop-filter: blur(16px); /* Arkasını buğulu gösterir */
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* İncecik beyaz çerçeve */
+    padding: 50px 40px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* --- BAŞLIKLAR --- */
+.cool-title {
+    font-weight: 900;
+    font-size: 3rem;
+    margin: 0;
+    background: linear-gradient(to right, #ff007f, #7928ca, #00d2ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -2px;
+}
+
+.subtitle {
+    color: #a0aab2;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+/* --- COOL INPUTLAR --- */
+.cool-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px;
+    color: #fff !important;
+    padding: 15px 20px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.cool-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.cool-input:focus {
+    outline: none;
+    background: rgba(0, 0, 0, 0.4) !important;
+    border-color: #00d2ff !important; /* Odaklanınca mavi parlar */
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.3) !important;
+}
+
+/* --- NEON BUTON --- */
+.cyber-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #ff007f, #7928ca);
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(121, 40, 202, 0.4);
+}
+
+.cyber-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 25px rgba(255, 0, 127, 0.5);
+    background: linear-gradient(45deg, #7928ca, #ff007f);
+}
+
+.cyber-btn:active {
+    transform: translateY(1px);
+}
