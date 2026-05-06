@@ -1,18 +1,10 @@
 package com.example.demo.model;
 
+import jakarta.persistence.*;
 import java.util.List;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Data;
 
 @Entity
 @Table(name = "departments")
-@Data
 public class Department {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +12,17 @@ public class Department {
 
     private String name;
 
-    @OneToMany(mappedBy = "department")
+    // mappedBy = "department" ifadesi, User sınıfındaki "private Department department" alanına bakar.
+    @OneToMany(mappedBy = "department") 
     private List<User> users;
+
+    public Department() {}
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public List<User> getUsers() { return users; }
+    public void setUsers(List<User> users) { this.users = users; }
+    
+    public Long getId() { return id; }
 }
