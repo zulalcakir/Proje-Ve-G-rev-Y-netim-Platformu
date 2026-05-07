@@ -23,7 +23,7 @@ public class SecurityConfig {
                 // 1. Herkese açık olan yollar
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js").permitAll() 
+                .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js", "/admin.html", "/admin.js").permitAll() 
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 
                 // 2. Sadece ADMIN'e açık olan yollar
