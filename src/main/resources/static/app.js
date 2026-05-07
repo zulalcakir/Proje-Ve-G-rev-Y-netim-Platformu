@@ -41,16 +41,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ username: usernameInput, password: passwordInput })
             })
             .then(response => {
-                if (response.ok) {
+                if (response.ok) return response.json(); // Başarılıysa kullanıcı verisini al
+                else throw new Error("Hata: Kullanıcı adı veya şifre yanlış!");
+            })
+            .then(user => {
+                // Rol kontrolü yapıyoruz: ROLE_ADMIN var mı?
+                const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
+                
+                if (isAdmin) {
+                    alert("Yönetici Girişi Onaylandı! Yönetim Paneline gidiliyor...");
+                    window.location.href = 'admin.html'; 
+                } else {
                     alert("Giriş Başarılı! Yönlendiriliyorsunuz...");
                     window.location.href = 'dashboard.html'; 
-                } else {
-                    alert("Hata: Kullanıcı adı veya şifre yanlış!");
                 }
             })
             .catch(error => {
                 console.error('Bağlantı hatası:', error);
-                alert("Sunucuya bağlanılamadı. Spring Boot çalışıyor mu?");
+                alert(error.message || "Sunucuya bağlanılamadı. Spring Boot çalışıyor mu?");
             });
         });
     }
@@ -70,16 +78,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ username: usernameInput, password: passwordInput })
             })
             .then(response => {
-                if (response.ok) {
+                if (response.ok) return response.json();
+                else throw new Error("Hata: Yetkisiz giriş denemesi veya yanlış şifre!");
+            })
+            .then(user => {
+                // Admin yetkisi olmayan birinin Admin sekmesinden girmesini engelliyoruz
+                const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
+                
+                if (isAdmin) {
                     alert("Yönetici Girişi Başarılı!");
-                    window.location.href = 'dashboard.html'; 
+                    window.location.href = 'admin.html'; 
                 } else {
-                    alert("Hata: Yetkisiz giriş denemesi veya yanlış şifre!");
+                    alert("Hata: Bu alan sadece yöneticiler içindir!");
                 }
             })
             .catch(error => {
                 console.error('Bağlantı hatası:', error);
-                alert("Sunucuya bağlanılamadı. Lütfen sistemi kontrol edin.");
+                alert(error.message || "Sunucuya bağlanılamadı. Lütfen sistemi kontrol edin.");
             });
         });
     }
@@ -103,7 +118,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(user)
             })
             .then(response => {
-                // Eğer sunucu 500 veya 404 gibi bir hata dönerse önce onu yakalayalım
                 if(response.ok) {
                     return response.json();
                 } else {
