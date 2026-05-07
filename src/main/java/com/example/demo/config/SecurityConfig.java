@@ -6,7 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher; // BÜTÜN SİHİR BU SATIRDA
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -19,12 +19,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                
-                // İŞTE DEĞİŞEN KISIM: H2 Konsolu için özel giriş anahtarı tanımladık
                 .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
                 
-                .requestMatchers("/", "/index.html", "/style.css", "/app.js").permitAll() 
+                // KRİTİK SATIR: dashboard.html ve dashboard.js eklendi
+                .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js").permitAll() 
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+                
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));

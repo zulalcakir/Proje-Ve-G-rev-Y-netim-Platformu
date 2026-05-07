@@ -21,22 +21,32 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Rolleri oluştur
-        Role adminRole = new Role();
-        adminRole.setName("ROLE_ADMIN");
-        roleRepository.save(adminRole);
+        
+        // 1. Rolleri Kontrol Et (Yoksa oluştur)
+        if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
+            Role adminRole = new Role();
+            adminRole.setName("ROLE_ADMIN");
+            roleRepository.save(adminRole);
+        }
 
-        Role userRole = new Role();
-        userRole.setName("ROLE_USER");
-        roleRepository.save(userRole);
+        if (roleRepository.findByName("ROLE_USER").isEmpty()) {
+            Role userRole = new Role();
+            userRole.setName("ROLE_USER");
+            roleRepository.save(userRole);
+        }
 
-        // Örnek Admin Kullanıcısı oluştur
-        User admin = new User();
-        admin.setUsername("admin");
-        admin.setPassword("admin123"); // Şimdilik düz metin
-        admin.setRoles(Set.of(adminRole));
-        userRepository.save(admin);
-
-        System.out.println(">>> Test kullanıcıları yüklendi: admin / admin123");
+        // 2. Admin Kullanıcısını Kontrol Et (Yoksa oluştur)
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            Role adminRole = roleRepository.findByName("ROLE_ADMIN").get();
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword("admin123"); 
+            admin.setEmail("admin@platform.com");
+            admin.setRoles(Set.of(adminRole));
+            userRepository.save(admin);
+            System.out.println(">>> Admin kullanıcısı ilk kez oluşturuldu.");
+        } else {
+            System.out.println(">>> Admin kullanıcısı zaten veritabanında mevcut, atlanıyor.");
+        }
     }
 }
