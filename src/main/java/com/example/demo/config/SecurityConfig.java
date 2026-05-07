@@ -2,6 +2,7 @@ package com.example.demo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,18 +14,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // API projelerinde CSRF genelde kapatılır
+            .csrf(csrf -> csrf.disable()) // API projelerinde CSRF koruması genelde kapatılır
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Giriş uç noktasına herkes erişsin
-                .requestMatchers("/h2-console/**").permitAll() // Veritabanını görebilmek için
+                // 1. Giriş uç noktasına herkes erişebilir
+                .requestMatchers("/api/auth/**").permitAll()
                 
-                // --- GÜNCELLEME: Arayüz dosyalarını dışarıya açıyoruz ---
+                // 2. Yeni kullanıcı kaydı için POST isteğine izin veriyoruz
+                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                
+                // 3. Veritabanını görebilmek için H2 konsoluna izin veriyoruz
+                .requestMatchers("/h2-console/**").permitAll()
+                
+                // 4. Arayüz (Frontend) dosyalarını dışarıya açıyoruz
                 .requestMatchers("/", "/index.html", "/style.css", "/app.js").permitAll() 
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 
-                .anyRequest().authenticated() // Diğer her şey için giriş şart
+                // 5. Diğer tüm istekler için giriş yapılmış olması şarttır
+                .anyRequest().authenticated()
             )
-            .headers(headers -> headers.frameOptions(frame -> frame.disable())); // H2 Konsolu için şart
+            // H2 Konsolunun frame içinde çalışabilmesi için bu ayar gereklidir
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
             
         return http.build();
     }
