@@ -1,4 +1,5 @@
-// --- 1. FORM GEÇİŞ ANİMASYONLARI (Aynen Kalıyor) ---
+// --- 1. FORM GEÇİŞ ANİMASYONLARI ---
+// Butonlara HTML içinden onClick ile tıklandığı için global alanda bırakıyoruz
 function switchForm(formType) {
     document.getElementById('userForm').style.display = 'none';
     document.getElementById('adminForm').style.display = 'none';
@@ -20,81 +21,109 @@ function switchForm(formType) {
     }
 }
 
-// --- 2. BACKEND'E (SPRING BOOT) BAĞLANMA İŞLEMLERİ ---
+// Tüm HTML sayfası yüklendikten sonra form dinleyicilerini başlat (Güvenlik için)
+document.addEventListener('DOMContentLoaded', function() {
 
-// A) ÜYE GİRİŞİ İŞLEMİ
-document.getElementById('userForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Sayfanın yenilenmesini engelle
-    
-    const username = document.getElementById('user-username').value;
-    const password = document.getElementById('user-password').value;
+    // --- 2. BACKEND'E (SPRING BOOT) BAĞLANMA İŞLEMLERİ ---
 
-    // Arka taraftaki AuthController'a istek atıyoruz
-    fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username, password: password })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert("Giriş Başarılı! Yönlendiriliyorsunuz...");
-            window.location.href = 'dashboard.html'; // ANA PANELE GEÇİŞ!
-        } else {
-            alert("Hata: Kullanıcı adı veya şifre yanlış!");
-        }
-    })
-    .catch(error => console.error('Bağlantı hatası:', error));
-});
+    // A) ÜYE GİRİŞİ İŞLEMİ
+    const userForm = document.getElementById('userForm');
+    if(userForm) {
+        userForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Sayfanın yenilenmesini engelle
+            
+            const usernameInput = document.getElementById('user-username').value;
+            const passwordInput = document.getElementById('user-password').value;
 
-// B) ADMİN GİRİŞİ İŞLEMİ
-document.getElementById('adminForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const username = document.getElementById('admin-username').value;
-    const password = document.getElementById('admin-password').value;
+            fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: usernameInput, password: passwordInput })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Giriş Başarılı! Yönlendiriliyorsunuz...");
+                    window.location.href = 'dashboard.html'; 
+                } else {
+                    alert("Hata: Kullanıcı adı veya şifre yanlış!");
+                }
+            })
+            .catch(error => {
+                console.error('Bağlantı hatası:', error);
+                alert("Sunucuya bağlanılamadı. Spring Boot çalışıyor mu?");
+            });
+        });
+    }
 
-    fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username, password: password })
-    })
-    .then(response => {
-        if (response.ok) {
-            // İleride admin paneli farklı olursa buradaki yönlendirmeyi admin.html yapabilirsin
-            alert("Yönetici Girişi Başarılı!");
-            window.location.href = 'dashboard.html'; 
-        } else {
-            alert("Hata: Yetkisiz giriş denemesi veya yanlış şifre!");
-        }
-    })
-    .catch(error => console.error('Bağlantı hatası:', error));
-});
+    // B) ADMİN GİRİŞİ İŞLEMİ
+    const adminForm = document.getElementById('adminForm');
+    if(adminForm) {
+        adminForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const usernameInput = document.getElementById('admin-username').value;
+            const passwordInput = document.getElementById('admin-password').value;
 
-// C) YENİ KAYIT OLMA İŞLEMİ
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // UserController tarafındaki User nesnesine uygun verileri alıyoruz
-    const user = {
-        username: document.getElementById('reg-username').value,
-        email: document.getElementById('reg-email').value,
-        password: document.getElementById('reg-password').value
-        // Ad Soyad için modelde yer açtıysanız onu da buraya ekleyebilirsiniz
-    };
+            fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: usernameInput, password: passwordInput })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Yönetici Girişi Başarılı!");
+                    window.location.href = 'dashboard.html'; 
+                } else {
+                    alert("Hata: Yetkisiz giriş denemesi veya yanlış şifre!");
+                }
+            })
+            .catch(error => {
+                console.error('Bağlantı hatası:', error);
+                alert("Sunucuya bağlanılamadı. Lütfen sistemi kontrol edin.");
+            });
+        });
+    }
 
-    fetch('http://localhost:8080/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.id) {
-            alert("Kayıt Başarılı! Şimdi giriş yapabilirsiniz.");
-            switchForm('user'); // Kayıt olunca otomatik Üye Girişi sekmesine at
-        } else {
-            alert("Kayıt sırasında bir hata oluştu.");
-        }
-    })
-    .catch(error => console.error('Bağlantı hatası:', error));
+    // C) YENİ KAYIT OLMA İŞLEMİ
+    const registerForm = document.getElementById('registerForm');
+    if(registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Verileri topluyoruz
+            const user = {
+                username: document.getElementById('reg-username').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value
+            };
+
+            fetch('http://localhost:8080/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            })
+            .then(response => {
+                // Eğer sunucu 500 veya 404 gibi bir hata dönerse önce onu yakalayalım
+                if(response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error("Kayıt işlemi sunucu tarafından reddedildi.");
+                }
+            })
+            .then(data => {
+                if(data && data.id) {
+                    alert("Kayıt Başarılı! Şimdi giriş yapabilirsiniz.");
+                    // Formları temizleyip üye girişine atalım
+                    document.getElementById('registerForm').reset();
+                    switchForm('user'); 
+                } else {
+                    alert("Kayıt sırasında bir hata oluştu.");
+                }
+            })
+            .catch(error => {
+                console.error('Kayıt hatası:', error);
+                alert("Veritabanına kayıt yapılamadı. Kullanıcı adı veya e-posta zaten kullanılıyor olabilir.");
+            });
+        });
+    }
 });
