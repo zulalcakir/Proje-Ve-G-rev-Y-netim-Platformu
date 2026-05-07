@@ -17,6 +17,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // Giriş uç noktasına herkes erişsin
                 .requestMatchers("/h2-console/**").permitAll() // Veritabanını görebilmek için
+                
+                // --- GÜNCELLEME: Arayüz dosyalarını dışarıya açıyoruz ---
+                .requestMatchers("/", "/index.html", "/style.css", "/app.js").permitAll() 
+                .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+                
                 .anyRequest().authenticated() // Diğer her şey için giriş şart
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable())); // H2 Konsolu için şart
