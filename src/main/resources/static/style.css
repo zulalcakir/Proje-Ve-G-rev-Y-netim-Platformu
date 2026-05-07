@@ -128,3 +128,34 @@ body, html {
 .cyber-btn:active {
     transform: translateY(1px);
 }
+/* --- ANA PANEL (DASHBOARD) ÖZEL EKLENTİLERİ --- */
+.dashboard-layout {
+    height: 100vh; /* Tam ekran yüksekliği */
+}
+
+/* Menü Linkleri İçin Makyaj */
+.cyber-menu-item {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    padding: 12px 15px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.cyber-menu-item:hover, .cyber-menu-item.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateX(5px); /* Üzerine gelince hafif sağa kayar */
+}
+
+/* İstatistik Kutuları ve Görev Satırları */
+.stat-box, .task-item {
+    background: rgba(0, 0, 0, 0.2); /* Camın içinde bir tık daha koyu alan */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.task-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(0, 210, 255, 0.3);
+}

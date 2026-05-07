@@ -17,20 +17,16 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        // Kullanıcıyı doğrula
+        // 1. Adım: Kullanıcının girdiği ad ve şifreyi veritabanında ara
         User user = authService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
         
+        // 2. Adım: Eğer kullanıcı bulunduysa ve şifre doğruysa (user null değilse)
         if (user != null) {
-            // "ROLE_ADMIN" yetkisi kontrolü
-            boolean isAdmin = user.getRoles().stream()
-                                  .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
-            
-            if (isAdmin) {
-                return ResponseEntity.ok(user); // Admin ise kullanıcı nesnesini dön
-            } else {
-                return ResponseEntity.status(403).body("Yetkisiz erişim: Admin yetkiniz bulunmuyor.");
-            }
+            // Yetkisine (Admin/Üye) bakmaksızın girişine onay ver ve bilgileri frontend'e gönder
+            return ResponseEntity.ok(user); 
         }
+        
+        // 3. Adım: Kullanıcı yoksa veya şifre yanlışsa 401 hatası fırlat
         return ResponseEntity.status(401).body("Hata: Kullanıcı adı veya şifre yanlış.");
     }
 }
