@@ -1,6 +1,6 @@
 package com.example.demo.model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime; // LocalDate yerine LocalDateTime geldi
 import java.util.Set;
 import jakarta.persistence.*;
 
@@ -13,7 +13,7 @@ public class Task {
     private String title;
     private String description;
     private String status; 
-    private LocalDate dueDate;
+    private LocalDateTime dueDate; // Dakika hesabı için güncellendi
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
@@ -50,8 +50,11 @@ public class Task {
     public void setDescription(String description) { this.description = description; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public LocalDate getDueDate() { return dueDate; }
-    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    
+    // LocalDate yerine LocalDateTime tipinde getter ve setter
+    public LocalDateTime getDueDate() { return dueDate; }
+    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+    
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
     public User getAssignedTo() { return assignedTo; }
