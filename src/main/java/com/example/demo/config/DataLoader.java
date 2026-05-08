@@ -5,6 +5,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.util.Set;
 import java.util.Optional;
@@ -14,17 +15,19 @@ public class DataLoader implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder; // Yeni eklenen bağımlılık
 
-    public DataLoader(UserRepository userRepository, RoleRepository roleRepository) {
+    // Constructor üzerinden PasswordEncoder enjekte ediliyor
+    public DataLoader(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) throws Exception {
         
         // 1. Rolleri Kontrol Et ve Oluştur
-        // findByName metodu Optional döndüğü için ifPresentOrElse veya isEmpty kontrolü sağlıklıdır
         if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
             Role adminRole = new Role();
             adminRole.setName("ROLE_ADMIN");
@@ -40,19 +43,19 @@ public class DataLoader implements CommandLineRunner {
         }
 
         // 2. Admin Kullanıcısını Kontrol Et ve Oluştur
-        // Username ile kontrol ederek mükerrer kayıt (Unique Result Error) hatasını engelliyoruz
         if (userRepository.findByUsername("admin").isEmpty()) {
-            // Rolün var olduğundan emin oluyoruz
             Optional<Role> adminRoleOpt = roleRepository.findByName("ROLE_ADMIN");
             
             if (adminRoleOpt.isPresent()) {
                 User admin = new User();
                 admin.setUsername("admin");
-                admin.setPassword("admin123"); // Not: Güvenlik için ileride BCrypt eklenebilir
+                
+                // GÜNCELLEME: Şifreyi BCrypt ile şifreliyoruz
+                admin.setPassword(passwordEncoder.encode("admin123")); 
+                
                 admin.setEmail("admin@platform.com");
                 admin.setRoles(Set.of(adminRoleOpt.get()));
                 
-                // User modelinde Email alanı zorunlu tutulduğu için set edilmesi kritiktir
                 userRepository.save(admin);
                 System.out.println(">>> Admin kullanıcısı (admin / admin123) başarıyla oluşturuldu.");
             }

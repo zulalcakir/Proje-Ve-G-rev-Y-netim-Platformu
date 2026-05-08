@@ -7,8 +7,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
@@ -20,32 +19,30 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) 
             .authorizeHttpRequests(auth -> auth
-                // 1. Herkese açık olan yollar
+                // 1. Herkese açık olan yollar (Giriş, Kayıt ve Statik Dosyalar)
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                 .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js", "/admin.html", "/admin.js").permitAll() 
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 
-                // 2. Sadece ADMIN'e açık olan yollar
+                // 2. Rol bazlı yetkilendirme (Sadece ADMIN erişebilir) [cite: 57]
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 
-                // 3. Diğer tüm istekler için giriş şart
+                // 3. Diğer tüm istekler için oturum yönetimi zorunludur [cite: 55]
                 .anyRequest().authenticated()
             )
-            // 4. Postman'den gelen giriş bilgilerini kabul et (Basic Auth)
+            // 4. Postman ve harici servis testleri için Basic Auth desteği
             .httpBasic(Customizer.withDefaults())
             
-            // 5. Frame ve H2 ayarları
+            // 5. Güvenlik gereksinimleri ve Frame ayarları [cite: 70]
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
             
         return http.build();
     }
 
-    // KRİTİK EKLEME: Şifrelerin düz metin olarak karşılaştırılmasını sağlar
+    // GÜVENLİ ŞİFRELEME: Şifrelerin BCrypt algoritması ile hashlenmesini sağlar [cite: 60, 74]
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Şimdilik "admin123" gibi düz metin şifreleri kabul etmesi için NoOp kullanıyoruz.
-        // İleride BCryptPasswordEncoder'a geçiş yapabiliriz.
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 }
