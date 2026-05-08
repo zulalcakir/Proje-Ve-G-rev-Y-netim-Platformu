@@ -24,7 +24,7 @@
                     
                     <ul class="nav flex-column gap-3">
                         <li class="nav-item">
-                            <a class="nav-link cyber-menu-item active" href="#">🏠 Ana Panel</a>
+                            <a class="nav-link cyber-menu-item active" href="dashboard.html">🏠 Ana Panel</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link cyber-menu-item" href="#">📁 Projelerim</a>
@@ -33,7 +33,7 @@
                             <a class="nav-link cyber-menu-item" href="#">✅ Görevler</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link cyber-menu-item" href="#">🔔 Bildirimler</a>
+                            <a class="nav-link cyber-menu-item" href="admin.html">🔔 Bildirimler</a>
                         </li>
                     </ul>
 
@@ -49,41 +49,38 @@
                     
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <div class="stat-box p-3 rounded">
+                            <div class="stat-box p-3 rounded text-center">
                                 <p class="mb-1 subtitle">Aktif Projeler</p>
-                                <h3 class="cool-title" style="font-size: 2rem;">3</h3>
+                                <h3 id="proje-sayisi" class="cool-title" style="font-size: 2.5rem;">...</h3>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="stat-box p-3 rounded">
+                            <div class="stat-box p-3 rounded text-center">
                                 <p class="mb-1 subtitle">Bekleyen Görevler</p>
-                                <h3 class="cool-title" style="font-size: 2rem;">12</h3>
+                                <h3 id="gorev-sayisi" class="cool-title" style="font-size: 2.5rem;">...</h3>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="stat-box p-3 rounded">
+                            <div class="stat-box p-3 rounded text-center">
                                 <p class="mb-1 subtitle">Tamamlanan</p>
-                                <h3 class="cool-title" style="font-size: 2rem;">28</h3>
+                                <h3 id="tamamlanan-sayisi" class="cool-title" style="font-size: 2.5rem;">0</h3>
                             </div>
                         </div>
                     </div>
 
-                    <h4 class="text-white mb-3 mt-5">Yaklaşan Görevler</h4>
-                    <div class="task-list">
-                        <div class="task-item d-flex justify-content-between align-items-center p-3 mb-2 rounded">
-                            <div>
-                                <h6 class="text-white mb-1 fw-bold">Frontend Arayüz Tasarımı</h6>
-                                <small class="subtitle">Proje ve Görev Yönetim Sistemi</small>
+                    <div class="row mt-5">
+                        <div class="col-md-7">
+                            <h4 class="text-white mb-3 fw-bold">Yaklaşan Görevler</h4>
+                            <div id="task-list-container" class="task-list">
+                                <p class="text-muted">Görevler yükleniyor...</p>
                             </div>
-                            <span class="badge bg-danger rounded-pill px-3 py-2">Yüksek Öncelik</span>
                         </div>
-                        
-                        <div class="task-item d-flex justify-content-between align-items-center p-3 mb-2 rounded">
-                            <div>
-                                <h6 class="text-white mb-1 fw-bold">Veritabanı Tablolarının Kurulumu</h6>
-                                <small class="subtitle">Proje ve Görev Yönetim Sistemi</small>
+
+                        <div class="col-md-5">
+                            <h4 class="text-white mb-3 fw-bold">Sistem Hareketleri</h4>
+                            <div id="recent-logs" class="stat-box p-3 rounded" style="min-height: 300px; background: rgba(255,255,255,0.05);">
+                                <p class="text-muted" style="font-size: 0.8rem;">Son işlemler taranıyor...</p>
                             </div>
-                            <span class="badge bg-info rounded-pill px-3 py-2">Orta Öncelik</span>
                         </div>
                     </div>
 
@@ -93,5 +90,6 @@
         </div>
     </div>
 
+    <script src="dashboard.js"></script>
 </body>
 </html>

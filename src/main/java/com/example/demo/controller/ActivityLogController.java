@@ -1,13 +1,9 @@
 package com.example.demo.controller;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import com.example.demo.model.ActivityLog;
 import com.example.demo.service.ActivityLogService;
 
@@ -15,9 +11,19 @@ import com.example.demo.service.ActivityLogService;
 @RequestMapping("/api/logs")
 @CrossOrigin(origins = "*")
 public class ActivityLogController {
+
     @Autowired 
     private ActivityLogService logService;
 
     @GetMapping
-    public List<ActivityLog> getAll() { return logService.getAllLogs(); }
+    public List<ActivityLog> getAll() { 
+        return logService.getAllLogs(); 
+    }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<String> clearLogs() {
+        // Service içindeki metot ismiyle tam eşleşmeli: deleteAllLogs
+        logService.deleteAllLogs(); 
+        return ResponseEntity.ok("Loglar temizlendi.");
+    }
 }
