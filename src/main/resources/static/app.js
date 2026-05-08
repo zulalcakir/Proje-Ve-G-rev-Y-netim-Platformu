@@ -1,6 +1,23 @@
-// --- 1. FORM GEÇİŞ ANİMASYONLARI ---
-// Butonlara HTML içinden onClick ile tıklandığı için global alanda bırakıyoruz
+// --- 1. MESAJ GÖSTERME FONKSİYONU (YENİ) ---
+function showAuthMessage(text, isError) {
+    const msgDiv = document.getElementById('auth-message');
+    msgDiv.innerText = text;
+    msgDiv.style.display = 'block';
+    
+    if (isError) {
+        msgDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Şeffaf kırmızı
+        msgDiv.style.color = '#ff4d4d'; // Canlı kırmızı yazı
+        msgDiv.style.border = '1px solid #ff4d4d';
+    } else {
+        msgDiv.style.backgroundColor = 'rgba(0, 210, 255, 0.2)'; // Şeffaf mavi/yeşil
+        msgDiv.style.color = '#00d2ff';
+        msgDiv.style.border = '1px solid #00d2ff';
+    }
+}
+
+// --- 2. FORM GEÇİŞLERİ ---
 function switchForm(formType) {
+    document.getElementById('auth-message').style.display = 'none'; // Geçişte mesajı gizle
     document.getElementById('userForm').style.display = 'none';
     document.getElementById('adminForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
@@ -21,17 +38,13 @@ function switchForm(formType) {
     }
 }
 
-// Tüm HTML sayfası yüklendikten sonra form dinleyicilerini başlat (Güvenlik için)
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 2. BACKEND'E (SPRING BOOT) BAĞLANMA İŞLEMLERİ ---
-
-    // A) ÜYE GİRİŞİ İŞLEMİ
+    // --- 3. ÜYE GİRİŞİ ---
     const userForm = document.getElementById('userForm');
     if(userForm) {
         userForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Sayfanın yenilenmesini engelle
-            
+            e.preventDefault();
             const usernameInput = document.getElementById('user-username').value;
             const passwordInput = document.getElementById('user-password').value;
 
@@ -41,34 +54,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ username: usernameInput, password: passwordInput })
             })
             .then(response => {
-                if (response.ok) return response.json(); // Başarılıysa kullanıcı verisini al
-                else throw new Error("Hata: Kullanıcı adı veya şifre yanlış!");
+                if (response.ok) return response.json();
+                else throw new Error("Kullanıcı adı veya şifre hatalı!");
             })
             .then(user => {
-                // Rol kontrolü yapıyoruz: ROLE_ADMIN var mı?
+                // BAŞARILI: Beklemeden yönlendir
                 const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
-                
-                if (isAdmin) {
-                    alert("Yönetici Girişi Onaylandı! Yönetim Paneline gidiliyor...");
-                    window.location.href = 'admin.html'; 
-                } else {
-                    alert("Giriş Başarılı! Yönlendiriliyorsunuz...");
-                    window.location.href = 'dashboard.html'; 
-                }
+                window.location.href = isAdmin ? 'admin.html' : 'dashboard.html'; 
             })
-            .catch(error => {
-                console.error('Bağlantı hatası:', error);
-                alert(error.message || "Sunucuya bağlanılamadı. Spring Boot çalışıyor mu?");
-            });
+            .catch(error => showAuthMessage(error.message, true)); // HATA: Kırmızı yazı göster
         });
     }
 
-    // B) ADMİN GİRİŞİ İŞLEMİ
+    // --- 4. ADMIN GİRİŞİ ---
     const adminForm = document.getElementById('adminForm');
     if(adminForm) {
         adminForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const usernameInput = document.getElementById('admin-username').value;
             const passwordInput = document.getElementById('admin-password').value;
 
@@ -79,33 +81,25 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => {
                 if (response.ok) return response.json();
-                else throw new Error("Hata: Yetkisiz giriş denemesi veya yanlış şifre!");
+                else throw new Error("Yönetici yetkisi yok veya şifre yanlış!");
             })
             .then(user => {
-                // Admin yetkisi olmayan birinin Admin sekmesinden girmesini engelliyoruz
                 const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
-                
                 if (isAdmin) {
-                    alert("Yönetici Girişi Başarılı!");
-                    window.location.href = 'admin.html'; 
+                    window.location.href = 'admin.html';
                 } else {
-                    alert("Hata: Bu alan sadece yöneticiler içindir!");
+                    throw new Error("Bu alan sadece yöneticiler içindir!");
                 }
             })
-            .catch(error => {
-                console.error('Bağlantı hatası:', error);
-                alert(error.message || "Sunucuya bağlanılamadı. Lütfen sistemi kontrol edin.");
-            });
+            .catch(error => showAuthMessage(error.message, true));
         });
     }
 
-    // C) YENİ KAYIT OLMA İŞLEMİ
+    // --- 5. KAYIT OLMA ---
     const registerForm = document.getElementById('registerForm');
     if(registerForm) {
         registerForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Verileri topluyoruz
             const user = {
                 username: document.getElementById('reg-username').value,
                 email: document.getElementById('reg-email').value,
@@ -118,26 +112,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(user)
             })
             .then(response => {
-                if(response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error("Kayıt işlemi sunucu tarafından reddedildi.");
-                }
+                if(response.ok) return response.json();
+                else throw new Error("Bu kullanıcı adı veya e-posta alınmış!");
             })
             .then(data => {
-                if(data && data.id) {
-                    alert("Kayıt Başarılı! Şimdi giriş yapabilirsiniz.");
-                    // Formları temizleyip üye girişine atalım
-                    document.getElementById('registerForm').reset();
-                    switchForm('user'); 
-                } else {
-                    alert("Kayıt sırasında bir hata oluştu.");
-                }
+                showAuthMessage("Kayıt Başarılı! Giriş yapabilirsiniz.", false);
+                setTimeout(() => switchForm('user'), 1500); // 1.5 saniye sonra giriş formuna at
             })
-            .catch(error => {
-                console.error('Kayıt hatası:', error);
-                alert("Veritabanına kayıt yapılamadı. Kullanıcı adı veya e-posta zaten kullanılıyor olabilir.");
-            });
+            .catch(error => showAuthMessage(error.message, true));
         });
     }
 });

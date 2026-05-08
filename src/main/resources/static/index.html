@@ -10,7 +10,6 @@
 </head>
 <body>
     
-    <!-- Senin Havalı Animasyonlu Kürelerin (Aynı Kaldı) -->
     <div class="color-blob blob-1"></div>
     <div class="color-blob blob-2"></div>
     <div class="color-blob blob-3"></div>
@@ -21,7 +20,8 @@
                 <h1 class="cool-title">MERHABA</h1>
                 <p class="subtitle">Platforma giriş yap ve projelerini tamamla.🚀</p>
                 
-                <!-- Formlar Arası Geçiş Butonları -->
+                <div id="auth-message" style="display: none; padding: 10px; border-radius: 12px; margin-bottom: 15px; font-size: 0.9rem; font-weight: 600; text-align: center; transition: all 0.3s ease;"></div>
+                
                 <div class="d-flex justify-content-center gap-2 mt-3">
                     <button class="btn btn-sm btn-outline-light active" id="btn-user" onclick="switchForm('user')">Üye Girişi</button>
                     <button class="btn btn-sm btn-outline-light" id="btn-admin" onclick="switchForm('admin')">Admin</button>
@@ -29,7 +29,6 @@
                 </div>
             </div>
             
-            <!-- 1. ÜYE GİRİŞ FORMU (Varsayılan olarak açık) -->
             <form id="userForm">
                 <div class="input-group-custom mb-4">
                     <input type="text" class="cool-input" id="user-username" placeholder="Kullanıcı Adı (@username)" required>
@@ -42,7 +41,6 @@
                 </button>
             </form>
 
-            <!-- 2. ADMIN GİRİŞ FORMU (Başlangıçta Gizli) -->
             <form id="adminForm" style="display: none;">
                 <div class="input-group-custom mb-4">
                     <input type="text" class="cool-input" id="admin-username" placeholder="Yönetici Kodu" required>
@@ -50,13 +48,11 @@
                 <div class="input-group-custom mb-5">
                     <input type="password" class="cool-input" id="admin-password" placeholder="Yönetici Şifresi" required>
                 </div>
-                <!-- Admin butonunu ayırt etmek için rengini Bootstrap üzerinden kırmızımtırak yaptık -->
                 <button type="submit" class="cyber-btn" style="background: linear-gradient(45deg, #ff416c, #ff4b2b);">
                     <span>YETKİLİ GİRİŞİ</span>
                 </button>
             </form>
 
-            <!-- 3. YENİ KAYIT FORMU (Başlangıçta Gizli) -->
             <form id="registerForm" style="display: none;">
                 <div class="input-group-custom mb-3">
                     <input type="text" class="cool-input" id="reg-name" placeholder="Ad Soyad" required>
