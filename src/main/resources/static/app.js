@@ -1,15 +1,15 @@
-// --- 1. MESAJ GÖSTERME FONKSİYONU (YENİ) ---
+// --- 1. MESAJ GÖSTERME FONKSİYONU ---
 function showAuthMessage(text, isError) {
     const msgDiv = document.getElementById('auth-message');
     msgDiv.innerText = text;
     msgDiv.style.display = 'block';
     
     if (isError) {
-        msgDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; // Şeffaf kırmızı
-        msgDiv.style.color = '#ff4d4d'; // Canlı kırmızı yazı
+        msgDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.2)'; 
+        msgDiv.style.color = '#ff4d4d'; 
         msgDiv.style.border = '1px solid #ff4d4d';
     } else {
-        msgDiv.style.backgroundColor = 'rgba(0, 210, 255, 0.2)'; // Şeffaf mavi/yeşil
+        msgDiv.style.backgroundColor = 'rgba(0, 210, 255, 0.2)'; 
         msgDiv.style.color = '#00d2ff';
         msgDiv.style.border = '1px solid #00d2ff';
     }
@@ -17,7 +17,7 @@ function showAuthMessage(text, isError) {
 
 // --- 2. FORM GEÇİŞLERİ ---
 function switchForm(formType) {
-    document.getElementById('auth-message').style.display = 'none'; // Geçişte mesajı gizle
+    document.getElementById('auth-message').style.display = 'none';
     document.getElementById('userForm').style.display = 'none';
     document.getElementById('adminForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
@@ -40,7 +40,7 @@ function switchForm(formType) {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 3. ÜYE GİRİŞİ ---
+    // --- 3. ÜYE GİRİŞİ (ADMİN GİRİŞİ ENGELLENDİ) ---
     const userForm = document.getElementById('userForm');
     if(userForm) {
         userForm.addEventListener('submit', function(e) {
@@ -58,15 +58,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 else throw new Error("Kullanıcı adı veya şifre hatalı!");
             })
             .then(user => {
-                // BAŞARILI: Beklemeden yönlendir
                 const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
-                window.location.href = isAdmin ? 'admin.html' : 'dashboard.html'; 
+                
+                // KRİTİK KONTROL: Eğer adminse üye girişini engelle
+                if (isAdmin) {
+                    throw new Error("Yöneticiler bu alanı kullanamaz. Lütfen Admin sekmesinden giriş yapın!");
+                }
+                
+                window.location.href = 'dashboard.html'; 
             })
-            .catch(error => showAuthMessage(error.message, true)); // HATA: Kırmızı yazı göster
+            .catch(error => showAuthMessage(error.message, true));
         });
     }
 
-    // --- 4. ADMIN GİRİŞİ ---
+    // --- 4. ADMIN GİRİŞİ (ÜYE GİRİŞİ ENGELLENDİ) ---
     const adminForm = document.getElementById('adminForm');
     if(adminForm) {
         adminForm.addEventListener('submit', function(e) {
@@ -81,10 +86,12 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => {
                 if (response.ok) return response.json();
-                else throw new Error("Yönetici yetkisi yok veya şifre yanlış!");
+                else throw new Error("Yönetici kodu veya şifre yanlış!");
             })
             .then(user => {
                 const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
+                
+                // KRİTİK KONTROL: Eğer admin değilse admin girişini engelle
                 if (isAdmin) {
                     window.location.href = 'admin.html';
                 } else {
@@ -117,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 showAuthMessage("Kayıt Başarılı! Giriş yapabilirsiniz.", false);
-                setTimeout(() => switchForm('user'), 1500); // 1.5 saniye sonra giriş formuna at
+                setTimeout(() => switchForm('user'), 1500);
             })
             .catch(error => showAuthMessage(error.message, true));
         });
