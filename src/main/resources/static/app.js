@@ -1,6 +1,8 @@
 // --- 1. MESAJ GÖSTERME FONKSİYONU ---
 function showAuthMessage(text, isError) {
     const msgDiv = document.getElementById('auth-message');
+    if (!msgDiv) return;
+
     msgDiv.innerText = text;
     msgDiv.style.display = 'block';
     
@@ -17,7 +19,9 @@ function showAuthMessage(text, isError) {
 
 // --- 2. FORM GEÇİŞLERİ ---
 function switchForm(formType) {
-    document.getElementById('auth-message').style.display = 'none';
+    const msgDiv = document.getElementById('auth-message');
+    if (msgDiv) msgDiv.style.display = 'none';
+
     document.getElementById('userForm').style.display = 'none';
     document.getElementById('adminForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
@@ -40,7 +44,7 @@ function switchForm(formType) {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 3. ÜYE GİRİŞİ (ADMİN GİRİŞİ ENGELLENDİ) ---
+    // --- 3. ÜYE GİRİŞİ (HAFIZAYA KAYDETME EKLENDİ) ---
     const userForm = document.getElementById('userForm');
     if(userForm) {
         userForm.addEventListener('submit', function(e) {
@@ -58,11 +62,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 else throw new Error("Kullanıcı adı veya şifre hatalı!");
             })
             .then(user => {
-                const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
+                const isAdmin = user.roles && user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
                 if (isAdmin) {
                     throw new Error("Yöneticiler bu alanı kullanamaz. Lütfen Admin sekmesinden giriş yapın!");
                 }
+                
+                // KRİTİK: Giriş yapan kullanıcıyı hafızaya alıyoruz
+                localStorage.setItem('user', JSON.stringify(user));
                 
                 window.location.href = 'dashboard.html'; 
             })
@@ -70,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 4. ADMIN GİRİŞİ (ÜYE GİRİŞİ ENGELLENDİ) ---
+    // --- 4. ADMIN GİRİŞİ (HAFIZAYA KAYDETME EKLENDİ) ---
     const adminForm = document.getElementById('adminForm');
     if(adminForm) {
         adminForm.addEventListener('submit', function(e) {
@@ -88,9 +95,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 else throw new Error("Yönetici kodu veya şifre yanlış!");
             })
             .then(user => {
-                const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
+                const isAdmin = user.roles && user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
                 if (isAdmin) {
+                    // KRİTİK: Admin bilgisini hafızaya alıyoruz
+                    localStorage.setItem('user', JSON.stringify(user));
                     window.location.href = 'admin.html';
                 } else {
                     throw new Error("Bu alan sadece yöneticiler içindir!");
@@ -100,12 +109,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 5. KAYIT OLMA (GÜNCELLENDİ: GERÇEK HATA MESAJINI GÖSTERİR) ---
+    // --- 5. KAYIT OLMA (fullName EKLENDİ) ---
     const registerForm = document.getElementById('registerForm');
     if(registerForm) {
         registerForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const user = {
+                fullName: document.getElementById('reg-name').value, // Ad Soyad eklendi
                 username: document.getElementById('reg-username').value,
                 email: document.getElementById('reg-email').value,
                 password: document.getElementById('reg-password').value
@@ -119,16 +129,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(async response => {
                 if(response.ok) return response.json();
                 
-                // Sunucudan gelen hata detayını oku
                 const errorData = await response.text();
-                throw new Error(errorData || "Kayıt sırasında bir sunucu hatası oluştu!");
+                throw new Error(errorData || "Kayıt sırasında bir hata oluştu!");
             })
             .then(data => {
                 showAuthMessage("Kayıt Başarılı! Giriş yapabilirsiniz.", false);
                 setTimeout(() => switchForm('user'), 1500);
             })
             .catch(error => {
-                // Artık burada sadece sabit bir yazı değil, Java'dan gelen hata görünecek
                 showAuthMessage(error.message, true);
                 console.error("Kayıt Hatası Detayı:", error);
             });

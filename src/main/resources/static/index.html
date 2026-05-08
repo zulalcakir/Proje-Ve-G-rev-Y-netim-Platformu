@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proje & Görev | Hoş Geldin</title>
+    <title>Hoş Geldin | P-PLATFORM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
@@ -15,14 +15,15 @@
     <div class="color-blob blob-3"></div>
 
     <div class="login-container">
+        
         <div class="glass-card">
             <div class="card-header text-center mb-4">
-                <h1 class="cool-title">MERHABA</h1>
-                <p class="subtitle">Platforma giriş yap ve projelerini tamamla.🚀</p>
+                <h1 class="cool-title" style="font-size: 2.8rem;">MERHABA</h1>
+                <p class="subtitle">Platforma giriş yap ve projelerini tamamla. 🚀</p>
                 
-                <div id="auth-message" style="display: none; padding: 10px; border-radius: 12px; margin-bottom: 15px; font-size: 0.9rem; font-weight: 600; text-align: center; transition: all 0.3s ease;"></div>
+                <div id="auth-message" style="display: none; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 0.85rem; font-weight: 600; text-align: center; border: 1px solid transparent;"></div>
                 
-                <div class="d-flex justify-content-center gap-2 mt-3">
+                <div class="d-flex justify-content-center gap-2 mt-4">
                     <button class="btn btn-sm btn-outline-light active" id="btn-user" onclick="switchForm('user')">Üye Girişi</button>
                     <button class="btn btn-sm btn-outline-light" id="btn-admin" onclick="switchForm('admin')">Yönetici Girişi</button>
                     <button class="btn btn-sm btn-outline-info" id="btn-register" onclick="switchForm('register')">Kayıt Ol</button>
@@ -30,10 +31,10 @@
             </div>
             
             <form id="userForm">
-                <div class="input-group-custom mb-4">
+                <div class="mb-3">
                     <input type="text" class="cool-input" id="user-username" placeholder="Kullanıcı Adı (@username)" required>
                 </div>
-                <div class="input-group-custom mb-5">
+                <div class="mb-4">
                     <input type="password" class="cool-input" id="user-password" placeholder="Şifren (Sır gibi saklı)" required>
                 </div>
                 <button type="submit" class="cyber-btn">
@@ -42,10 +43,10 @@
             </form>
 
             <form id="adminForm" style="display: none;">
-                <div class="input-group-custom mb-4">
+                <div class="mb-3">
                     <input type="text" class="cool-input" id="admin-username" placeholder="Yönetici Kodu" required>
                 </div>
-                <div class="input-group-custom mb-5">
+                <div class="mb-4">
                     <input type="password" class="cool-input" id="admin-password" placeholder="Yönetici Şifresi" required>
                 </div>
                 <button type="submit" class="cyber-btn" style="background: linear-gradient(45deg, #ff416c, #ff4b2b);">
@@ -54,16 +55,16 @@
             </form>
 
             <form id="registerForm" style="display: none;">
-                <div class="input-group-custom mb-3">
+                <div class="mb-2">
                     <input type="text" class="cool-input" id="reg-name" placeholder="Ad Soyad" required>
                 </div>
-                <div class="input-group-custom mb-3">
+                <div class="mb-2">
                     <input type="email" class="cool-input" id="reg-email" placeholder="E-posta Adresi" required>
                 </div>
-                <div class="input-group-custom mb-3">
+                <div class="mb-2">
                     <input type="text" class="cool-input" id="reg-username" placeholder="Kullanıcı Adı Seç" required>
                 </div>
-                <div class="input-group-custom mb-4">
+                <div class="mb-4">
                     <input type="password" class="cool-input" id="reg-password" placeholder="Güçlü Bir Şifre" required>
                 </div>
                 <button type="submit" class="cyber-btn" style="background: linear-gradient(45deg, #00d2ff, #3a7bd5);">

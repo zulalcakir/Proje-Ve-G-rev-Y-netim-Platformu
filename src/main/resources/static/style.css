@@ -1,23 +1,24 @@
-/* --- GENEL AYARLAR --- */
+@charset "UTF-8";
+
+/* --- 1. GENEL AYARLAR --- */
 body, html {
     height: 100%;
     margin: 0;
     font-family: 'Montserrat', sans-serif;
     background-color: #0f0c29; /* Koyu lacivert/mor alt ton */
-    overflow-x: hidden; /* Sağa sola kaymayı engeller */
-    overflow-y: auto;   /* Aşağı inmeye İZİN VERİR */
+    overflow-x: hidden;
+    overflow-y: auto;
     color: #fff;
-    /* Firefox ve Internet Explorer için çubuğu gizler */
+    /* Kaydırma çubuklarını gizle */
     scrollbar-width: none; 
     -ms-overflow-style: none; 
 }
 
-/* Chrome, Safari ve Opera için yandaki çubuğu gizler */
 ::-webkit-scrollbar {
     display: none;
 }
 
-/* --- ARKADAKİ NEON RENK KÜRELERİ --- */
+/* --- 2. ARKADAKİ NEON RENK KÜRELERİ --- */
 .color-blob {
     position: absolute;
     border-radius: 50%;
@@ -26,186 +27,195 @@ body, html {
     animation: float 10s infinite ease-in-out alternate;
 }
 
-.blob-1 {
-    width: 300px; height: 300px;
-    background: #ff007f; /* Neon pembe */
-    top: -50px; left: -50px;
-}
+.blob-1 { width: 300px; height: 300px; background: #ff007f; top: -50px; left: -50px; }
+.blob-2 { width: 400px; height: 400px; background: #7928ca; bottom: -100px; right: -100px; animation-delay: -3s; }
+.blob-3 { width: 250px; height: 250px; background: #00d2ff; top: 40%; left: 50%; animation-delay: -5s; }
 
-.blob-2 {
-    width: 400px; height: 400px;
-    background: #7928ca; /* Mor */
-    bottom: -100px; right: -100px;
-    animation-delay: -3s;
-}
-
-.blob-3 {
-    width: 250px; height: 250px;
-    background: #00d2ff; /* Camgöbeği/Mavi */
-    top: 40%; left: 50%;
-    animation-delay: -5s;
-}
-
-/* Kürelerin yavaşça hareket etme efekti */
 @keyframes float {
     0% { transform: translateY(0) scale(1); }
     100% { transform: translateY(30px) scale(1.1); }
 }
 
+/* --- 3. LAYOUT & TAŞIYICILAR (YAYILMAYI ÖNLEYEN KISIM) --- */
+
+/* Giriş sayfasını merkezleyen ana kap */
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-/* --- BUZLU CAM (GLASSMORPHISM) KARTI --- */
+/* Buzlu Cam Kartı */
 .glass-card {
-    background: rgba(255, 255, 255, 0.05); /* Çok hafif beyaz saydamlık */
-    backdrop-filter: blur(16px); /* Arkasını buğulu gösterir */
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1); /* İncecik beyaz çerçeve */
-    padding: 50px 40px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
-    width: 100%;
-    max-width: 400px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    padding: 40px;
+    transition: all 0.3s ease;
 }
 
-/* --- BAŞLIKLAR --- */
+/* Giriş sayfasındaki kartın çok yayılmasını engelle */
+.login-container .glass-card {
+    width: 100%;
+    max-width: 420px; /* Kartın genişliğini burada sabitledik */
+}
+
+/* --- 4. BAŞLIKLAR & METİNLER --- */
 .cool-title {
     font-weight: 900;
-    font-size: 3rem;
-    margin: 0;
     background: linear-gradient(to right, #ff007f, #7928ca, #00d2ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    letter-spacing: -2px;
+    letter-spacing: -1px;
+    margin-bottom: 10px;
 }
 
 .subtitle {
     color: #a0aab2;
-    font-size: 0.9rem;
-    margin-top: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
 }
 
-/* --- COOL INPUTLAR --- */
+/* --- 5. PANEL BİLEŞENLERİ --- */
+
+.cyber-menu-item {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-weight: 600;
+    padding: 14px 20px !important;
+    border-radius: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    display: block;
+}
+
+.cyber-menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff !important;
+    transform: translateX(8px);
+}
+
+.cyber-menu-item.active {
+    background: linear-gradient(90deg, rgba(255, 0, 127, 0.2), transparent);
+    border-left: 3px solid #ff007f;
+    color: #fff !important;
+}
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    transition: all 0.4s ease;
+}
+
+.stat-box:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(0, 210, 255, 0.4);
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-left: 4px solid #ff007f;
+    padding-left: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- 6. INPUTLAR & BUTONLAR --- */
 .cool-input {
     width: 100%;
-    background: rgba(0, 0, 0, 0.2) !important;
+    background: rgba(0, 0, 0, 0.3) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 12px;
     color: #fff !important;
-    padding: 15px 20px;
+    padding: 15px 18px;
     font-size: 1rem;
     transition: all 0.3s ease;
-}
-
-.cool-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    outline: none;
+    box-sizing: border-box; /* Padding'in genişliği bozmasını önler */
 }
 
 .cool-input:focus {
-    outline: none;
+    border-color: #00d2ff !important;
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2) !important;
     background: rgba(0, 0, 0, 0.4) !important;
-    border-color: #00d2ff !important; /* Odaklanınca mavi parlar */
-    box-shadow: 0 0 15px rgba(0, 210, 255, 0.3) !important;
 }
 
-/* --- NEON BUTON --- */
 .cyber-btn {
     width: 100%;
-    padding: 16px;
+    padding: 15px;
     border: none;
     border-radius: 12px;
     background: linear-gradient(45deg, #ff007f, #7928ca);
     color: white;
     font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: 1px;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 20px rgba(121, 40, 202, 0.4);
+    box-shadow: 0 8px 20px rgba(255, 0, 127, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .cyber-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 15px 25px rgba(255, 0, 127, 0.5);
-    background: linear-gradient(45deg, #7928ca, #ff007f);
+    box-shadow: 0 12px 25px rgba(255, 0, 127, 0.5);
+    filter: brightness(1.1);
 }
 
-.cyber-btn:active {
-    transform: translateY(1px);
-}
-
-/* --- ANA PANEL (DASHBOARD) ÖZEL EKLENTİLERİ --- */
-.dashboard-layout {
-    height: 100vh; /* Tam ekran yüksekliği */
-}
-
-/* Menü Linkleri İçin Makyaj */
-.cyber-menu-item {
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 600;
-    padding: 12px 15px;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.cyber-menu-item:hover, .cyber-menu-item.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    transform: translateX(5px); /* Üzerine gelince hafif sağa kayar */
-}
-
-/* İstatistik Kutuları ve Görev Satırları */
-.stat-box, .task-item {
-    background: rgba(0, 0, 0, 0.2); /* Camın içinde bir tık daha koyu alan */
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.3s ease;
-}
-
-.task-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(0, 210, 255, 0.3);
-}
-
-/* --- KULLANICI EKLEME MODAL (AÇILIR PENCERE) TASARIMI --- */
+/* --- 7. MODAL TASARIMI --- */
 .modal {
-    display: none; /* Başlangıçta gizli */
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 0; top: 0;
     width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.8); /* Arkaplanı biraz daha kararttık */
-    backdrop-filter: blur(8px); /* Daha şık bir buğulu cam efekti */
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
 }
 
 .modal-content {
     position: relative;
-    margin: 5% auto; /* Yukarıdan %5 aşağıda başlasın */
-    width: 90%;
+    margin: 5% auto;
+    width: 95%;
     max-width: 450px;
-    animation: slideDown 0.4s ease-out;
+    animation: slideDown 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    border: none;
+    background: none; /* Glass card zaten içinde olacak */
 }
 
 .close-btn {
     position: absolute;
     right: 25px; top: 15px;
-    color: #fff;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 30px;
-    font-weight: bold;
     cursor: pointer;
-    transition: color 0.3s ease;
-    z-index: 10;
+    transition: 0.3s;
+    z-index: 100;
 }
 
-.close-btn:hover {
-    color: #ff007f; /* Çarpının üzerine gelince pembe yansın */
-}
+.close-btn:hover { color: #ff007f; }
 
-/* Pencere açılırken yukarıdan aşağı süzülme animasyonu */
 @keyframes slideDown {
-    from { transform: translateY(-50px); opacity: 0; }
+    from { transform: translateY(-80px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- 8. LOG & KAYDIRMA ALANLARI --- */
+#recent-logs, #systemLogs {
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.activity-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px 0;
 }

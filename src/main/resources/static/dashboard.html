@@ -3,10 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ana Panel | Proje Yönetimi</title>
+    <title>Ana Panel | P-PLATFORM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Panel için ekstra şıklık dokunuşları */
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .stat-box:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-5px);
+            border-color: rgba(0, 210, 255, 0.4);
+        }
+        .cyber-menu-item {
+            border-radius: 12px;
+            padding: 12px 20px !important;
+            margin-bottom: 5px;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-left: 4px solid #ff007f;
+            padding-left: 15px;
+        }
+        .activity-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 0;
+        }
+        .activity-item:last-child { border-bottom: none; }
+    </style>
 </head>
 <body>
     
@@ -14,72 +44,102 @@
     <div class="color-blob blob-2"></div>
     <div class="color-blob blob-3"></div>
 
-    <div class="container-fluid p-4 dashboard-layout">
-        <div class="row h-100">
+    <div class="container-fluid p-4 dashboard-layout" style="height: 100vh;">
+        <div class="row h-100 g-4">
             
-            <div class="col-md-3 h-100">
+            <div class="col-lg-3 h-100">
                 <div class="glass-card h-100 d-flex flex-column p-4">
-                    <h3 class="cool-title" style="font-size: 1.8rem;">P-PLATFORM</h3>
-                    <p class="subtitle mb-5">Ana Menü</p>
+                    <div class="brand-area mb-5">
+                        <h3 class="cool-title" style="font-size: 1.8rem;">P-PLATFORM</h3>
+                        <p class="subtitle" style="font-size: 0.75rem; letter-spacing: 2px;">MANAGEMENT SUITE</p>
+                    </div>
                     
-                    <ul class="nav flex-column gap-3">
-                        <li class="nav-item">
-                            <a class="nav-link cyber-menu-item active" href="dashboard.html">🏠 Ana Panel</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link cyber-menu-item" href="#">📁 Projelerim</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link cyber-menu-item" href="#">✅ Görevler</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link cyber-menu-item" href="admin.html">🔔 Bildirimler</a>
-                        </li>
-                    </ul>
+                    <nav class="flex-grow-1">
+                        <ul class="nav flex-column gap-2">
+                            <li class="nav-item">
+                                <a class="nav-link cyber-menu-item active" href="dashboard.html">🏠 Ana Panel</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link cyber-menu-item" href="#">📁 Projelerim</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link cyber-menu-item" href="#">✅ Görevler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link cyber-menu-item" href="#">🔔 Bildirimler</a>
+                            </li>
+                        </ul>
+                    </nav>
 
-                    <button class="cyber-btn mt-auto" style="padding: 10px; font-size: 0.9rem;" onclick="window.location.href='index.html'">
-                        <span>ÇIKIŞ YAP</span>
-                    </button>
+                    <div class="profile-section mt-auto pt-4 border-top border-white border-opacity-10">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-circle me-3" style="width: 40px; height: 40px; background: linear-gradient(45deg, #ff007f, #7928ca); border-radius: 50%;"></div>
+                            <div>
+                                <p class="m-0 fw-bold text-white" style="font-size: 0.9rem;">Kullanıcı Paneli</p>
+                                <p class="m-0 text-muted" style="font-size: 0.75rem;">Çevrimiçi</p>
+                            </div>
+                        </div>
+                        <button class="cyber-btn w-100" style="padding: 10px; font-size: 0.85rem;" onclick="window.location.href='index.html'">
+                            <span>GÜVENLİ ÇIKIŞ</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-9 h-100">
-                <div class="glass-card h-100 p-4" style="overflow-y: auto;">
-                    <h2 class="text-white mb-4 fw-bold">Hoş Geldin! 👋</h2>
+            <div class="col-lg-9 h-100">
+                <div class="glass-card h-100 p-4" style="overflow-y: auto; scrollbar-width: none;">
                     
-                    <div class="row mb-4">
+                    <div class="header-section mb-5">
+                        <h2 class="text-white fw-900" style="font-size: 2.2rem;">Hoş Geldin! 👋</h2>
+                        <p class="subtitle">İşte projelerindeki son durum ve bekleyen işlerin.</p>
+                    </div>
+                    
+                    <div class="row g-4 mb-5">
                         <div class="col-md-4">
-                            <div class="stat-box p-3 rounded text-center">
-                                <p class="mb-1 subtitle">Aktif Projeler</p>
-                                <h3 id="proje-sayisi" class="cool-title" style="font-size: 2.5rem;">...</h3>
+                            <div class="stat-box p-4 rounded-4">
+                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem;">Aktif Projeler</p>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h3 id="proje-sayisi" class="cool-title m-0" style="font-size: 2.8rem;">0</h3>
+                                    <span style="font-size: 1.5rem;">🚀</span>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="stat-box p-3 rounded text-center">
-                                <p class="mb-1 subtitle">Bekleyen Görevler</p>
-                                <h3 id="gorev-sayisi" class="cool-title" style="font-size: 2.5rem;">...</h3>
+                            <div class="stat-box p-4 rounded-4">
+                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem;">Bekleyen Görevler</p>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h3 id="gorev-sayisi" class="cool-title m-0" style="font-size: 2.8rem;">0</h3>
+                                    <span style="font-size: 1.5rem;">⏳</span>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="stat-box p-3 rounded text-center">
-                                <p class="mb-1 subtitle">Tamamlanan</p>
-                                <h3 id="tamamlanan-sayisi" class="cool-title" style="font-size: 2.5rem;">0</h3>
+                            <div class="stat-box p-4 rounded-4">
+                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem;">Tamamlanan</p>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h3 id="tamamlanan-sayisi" class="cool-title m-0" style="font-size: 2.8rem;">0</h3>
+                                    <span style="font-size: 1.5rem;">🏆</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row mt-5">
-                        <div class="col-md-7">
-                            <h4 class="text-white mb-3 fw-bold">Yaklaşan Görevler</h4>
-                            <div id="task-list-container" class="task-list">
-                                <p class="text-muted">Görevler yükleniyor...</p>
+                    <div class="row g-4">
+                        <div class="col-xl-7">
+                            <h4 class="text-white mb-4 fw-bold section-title">Yaklaşan Görevler</h4>
+                            <div class="stat-box p-4 rounded-4" style="min-height: 350px;">
+                                <div id="task-list-container" class="task-list">
+                                    <div class="d-flex flex-column align-items-center justify-content-center h-100 mt-5 pt-5">
+                                        <p class="text-muted">Görevler analiz ediliyor...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-md-5">
-                            <h4 class="text-white mb-3 fw-bold">Sistem Hareketleri</h4>
-                            <div id="recent-logs" class="stat-box p-3 rounded" style="min-height: 300px; background: rgba(255,255,255,0.05);">
-                                <p class="text-muted" style="font-size: 0.8rem;">Son işlemler taranıyor...</p>
+                        <div class="col-xl-5">
+                            <h4 class="text-white mb-4 fw-bold section-title">Sistem Hareketleri</h4>
+                            <div id="recent-logs" class="stat-box p-4 rounded-4" style="min-height: 350px; font-size: 0.85rem;">
+                                <p class="text-muted">Son işlemler taranıyor...</p>
                             </div>
                         </div>
                     </div>
