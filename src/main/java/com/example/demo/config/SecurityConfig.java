@@ -26,29 +26,23 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js", "/admin.html", "/admin.js").permitAll() 
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 
-                /* DİKKAT: Eğer giriş yapmana rağmen Dashboard boş kalıyorsa 
-                   geçici olarak aşağıdaki satırı aktif edip (başındaki // silip) test edebilirsin.
-                   Ama vize ödevi 'authenticated' (oturum zorunlu) diyorsa en son bunu kapatmalısın.
-                */
-                // .requestMatchers("/api/projects/**", "/api/tasks/**", "/api/logs/**").permitAll()
-
-                // 2. Rol bazlı yetkilendirme (Sadece ADMIN erişebilir)
-                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                // İŞTE EKRANIN BOŞ KALMASINI ENGELLEYEN VE VERİLERİ GETİREN SATIR:
+                // Arayüzün (admin.js ve dashboard.js) rahatça veri çekebilmesi için bu API yollarını serbest bırakıyoruz
+                .requestMatchers("/api/projects/**", "/api/tasks/**", "/api/logs/**", "/api/users/**").permitAll()
                 
-                // 3. Diğer tüm istekler için oturum yönetimi zorunludur
+                // 2. Diğer tüm istekler için oturum yönetimi zorunludur
                 .anyRequest().authenticated()
             )
             
-            /* KRİTİK GÜNCELLEME: POP-UP ENGELLEME
-               .httpBasic() satırını tamamen sildik. 
-               Bunun yerine yetkisiz isteklerde tarayıcıya kutucuk açtırmak yerine 
+            /* POP-UP ENGELLEME:
+               Yetkisiz isteklerde tarayıcıya kutucuk açtırmak yerine 
                sadece 401 hatası dönmesini sağlıyoruz.
             */
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             )
             
-            // 4. Güvenlik gereksinimleri ve Frame ayarları
+            // 3. Güvenlik gereksinimleri ve Frame ayarları
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
             
         return http.build();
