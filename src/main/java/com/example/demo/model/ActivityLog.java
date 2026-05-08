@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "activity_logs")
@@ -11,18 +12,22 @@ public class ActivityLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String action;
 
+    @Column(nullable = false)
     private LocalDateTime timestamp = LocalDateTime.now();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    // FetchType'ı EAGER yaptık ki logları çekerken kullanıcı bilgisi de anında gelsin, hata çıkmasın.
+    // JsonIgnoreProperties ise sonsuz döngüye girmeyi engeller.
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = true) 
+    @JsonIgnoreProperties({"roles", "password", "department"})
     private User user;
 
     public ActivityLog() {}
 
-    // --- MANUEL GETTER VE SETTERLAR (Hataları çözen kısım) ---
-
+    // --- GETTER VE SETTERLAR ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

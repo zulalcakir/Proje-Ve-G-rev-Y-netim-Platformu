@@ -5,10 +5,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 2. Her 30 saniyede bir logları arka planda otomatik yenile (Canlı akış için)
     setInterval(loglariYukle, 30000);
+
+    // 3. Yeni Kullanıcı Formunu Dinle (Eksik olan kısım buydu)
+    const adminAddUserForm = document.getElementById('adminAddUserForm');
+    if(adminAddUserForm) {
+        adminAddUserForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newUser = {
+                fullName: document.getElementById('admin-reg-name').value,
+                email: document.getElementById('admin-reg-email').value,
+                username: document.getElementById('admin-reg-username').value,
+                password: document.getElementById('admin-reg-password').value
+            };
+
+            fetch('http://localhost:8080/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUser)
+            })
+            .then(response => {
+                if(response.ok) {
+                    closeUserModal(); // Başarılıysa pencereyi kapat
+                    verileriYukle();  // Tabloyu tazele
+                    loglariYukle();   // Loglara "Yeni kullanıcı eklendi" düşsün
+                    adminAddUserForm.reset(); // Formu temizle
+                } else {
+                    alert("Kullanıcı eklenirken bir hata oluştu. Kullanıcı adı veya e-posta alınmış olabilir.");
+                }
+            })
+            .catch(err => console.error("Kayıt Hatası:", err));
+        });
+    }
 });
 
+// --- MODAL KONTROLLERİ ---
+function openUserModal() {
+    document.getElementById('userModal').style.display = 'block';
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+}
+
+// Pencere dışında bir yere tıklanırsa kapat
+window.onclick = function(event) {
+    const modal = document.getElementById('userModal');
+    if (event.target == modal) {
+        closeUserModal();
+    }
+}
+
+// --- VERİ YÜKLEME ---
 function verileriYukle() {
-    // Tüm Kullanıcıları Getir ve Tabloya Bas
     fetch('http://localhost:8080/api/users')
     .then(res => res.json())
     .then(users => {
@@ -17,7 +66,10 @@ function verileriYukle() {
         tbody.innerHTML = '';
 
         users.forEach(user => {
-            const roles = user.roles.map(r => r.name).join(', ');
+            const roles = user.roles && user.roles.length > 0 
+                          ? user.roles.map(r => r.name).join(', ') 
+                          : 'ÜYE';
+            
             tbody.innerHTML += `
                 <tr>
                     <td>${user.id}</td>
@@ -38,7 +90,6 @@ function verileriYukle() {
         });
     });
 
-    // Tüm Projeleri Getir (İstatistik Kartı için)
     fetch('http://localhost:8080/api/projects')
     .then(res => res.json())
     .then(projects => {
@@ -46,7 +97,7 @@ function verileriYukle() {
     });
 }
 
-// Hocanın istediği Sistem İşlem Loglarını çeken bölüm
+// --- LOGLARI YÜKLEME ---
 function loglariYukle() {
     const logContainer = document.getElementById('systemLogs');
     
@@ -58,17 +109,15 @@ function loglariYukle() {
             return;
         }
 
-        logContainer.innerHTML = ''; // Önceki içeriği temizle
+        logContainer.innerHTML = ''; 
         
-        // En yeni logları en üstte göstermek için listeyi tersine çeviriyoruz (.reverse)
         logs.reverse().forEach(log => {
             const date = new Date(log.timestamp);
             const timeStr = date.toLocaleTimeString('tr-TR');
             
-            // Logun türüne göre metin rengini ayarla (Silme kırmızı, Ekleme yeşil vb.)
             let textColor = 'text-white';
             if (log.action.includes('silindi') || log.action.includes('Hata')) textColor = 'text-danger';
-            else if (log.action.includes('eklendi') || log.action.includes('yeni')) textColor = 'text-success';
+            else if (log.action.includes('eklendi') || log.action.includes('kayıt')) textColor = 'text-success';
             else if (log.action.includes('giriş')) textColor = 'text-info';
 
             logContainer.innerHTML += `
@@ -84,13 +133,12 @@ function loglariYukle() {
     });
 }
 
-// Silme (Delete) İşlemi
+// --- SİLME İŞLEMİ ---
 function kullaniciSil(id) {
     if(confirm('Bu kullanıcıyı tamamen silmek istediğinize emin misiniz?')) {
         fetch(`http://localhost:8080/api/users/${id}`, { method: 'DELETE' })
         .then(res => {
             if(res.ok) {
-                // Silme başarılıysa listeyi ve logları anında yenile
                 verileriYukle(); 
                 loglariYukle();  
             } else {

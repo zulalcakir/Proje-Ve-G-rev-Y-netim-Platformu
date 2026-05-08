@@ -60,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(user => {
                 const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
-                // KRİTİK KONTROL: Eğer adminse üye girişini engelle
                 if (isAdmin) {
                     throw new Error("Yöneticiler bu alanı kullanamaz. Lütfen Admin sekmesinden giriş yapın!");
                 }
@@ -91,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(user => {
                 const isAdmin = user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
-                // KRİTİK KONTROL: Eğer admin değilse admin girişini engelle
                 if (isAdmin) {
                     window.location.href = 'admin.html';
                 } else {
@@ -102,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 5. KAYIT OLMA ---
+    // --- 5. KAYIT OLMA (GÜNCELLENDİ: GERÇEK HATA MESAJINI GÖSTERİR) ---
     const registerForm = document.getElementById('registerForm');
     if(registerForm) {
         registerForm.addEventListener('submit', function(e) {
@@ -118,15 +116,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(user)
             })
-            .then(response => {
+            .then(async response => {
                 if(response.ok) return response.json();
-                else throw new Error("Bu kullanıcı adı veya e-posta alınmış!");
+                
+                // Sunucudan gelen hata detayını oku
+                const errorData = await response.text();
+                throw new Error(errorData || "Kayıt sırasında bir sunucu hatası oluştu!");
             })
             .then(data => {
                 showAuthMessage("Kayıt Başarılı! Giriş yapabilirsiniz.", false);
                 setTimeout(() => switchForm('user'), 1500);
             })
-            .catch(error => showAuthMessage(error.message, true));
+            .catch(error => {
+                // Artık burada sadece sabit bir yazı değil, Java'dan gelen hata görünecek
+                showAuthMessage(error.message, true);
+                console.error("Kayıt Hatası Detayı:", error);
+            });
         });
     }
 });
