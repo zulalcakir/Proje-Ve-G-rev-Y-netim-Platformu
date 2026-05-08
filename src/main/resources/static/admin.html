@@ -10,6 +10,18 @@
         .blob-1 { background: #ff4b2b; }
         .blob-2 { background: #ff416c; }
         .stat-card { background: rgba(255, 65, 108, 0.1); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        /* Log Kutusu Tasarımı (Hocanın istediği loglar için) */
+        .log-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            height: 200px;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -18,6 +30,7 @@
 
     <div class="container-fluid p-4">
         <div class="glass-card" style="max-width: 1200px; margin: auto;">
+            
             <div class="d-flex justify-content-between align-items-center mb-5">
                 <h1 class="cool-title" style="font-size: 2.5rem;">SİSTEM YÖNETİMİ</h1>
                 <button class="btn btn-outline-danger" onclick="window.location.href='index.html'">GÜVENLİ ÇIKIŞ</button>
@@ -44,15 +57,20 @@
                 </div>
             </div>
 
-            <h4 class="text-white mb-3">Tüm Kullanıcıların Listesi</h4>
-            <div class="table-responsive">
-                <table class="table table-dark table-hover">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-white m-0">Tüm Kullanıcıların Listesi</h4>
+                <button class="btn btn-success btn-sm fw-bold px-3">+ Yeni Kullanıcı Ekle</button>
+            </div>
+            
+            <div class="table-responsive mb-5">
+                <table class="table table-dark table-hover align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Kullanıcı Adı</th>
                             <th>E-posta</th>
                             <th>Roller</th>
+                            <th>Durum</th>
                             <th>İşlem</th>
                         </tr>
                     </thead>
@@ -60,6 +78,13 @@
                         </tbody>
                 </table>
             </div>
+
+            <h4 class="text-white mb-3">Sistem İşlem Logları</h4>
+            <div class="log-box" id="systemLogs">
+                <div class="text-success">[09:15:22] SİSTEM: Yönetici girişi yapıldı (admin).</div>
+                <div class="text-muted mt-2">... Diğer işlemler bağlandıkça buraya düşecek ...</div>
+            </div>
+
         </div>
     </div>
     <script src="admin.js"></script>
