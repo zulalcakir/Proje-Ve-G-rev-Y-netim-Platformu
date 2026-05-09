@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Penalty;
 import com.example.demo.service.PenaltyService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // GÜVENLİK İÇİN EKLENDİ
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -15,6 +16,14 @@ public class PenaltyController {
 
     public PenaltyController(PenaltyService penaltyService) {
         this.penaltyService = penaltyService;
+    }
+
+    // --- YENİ EKLENEN ADMİN UÇ NOKTASI ---
+    // Sadece "ROLE_ADMIN" yetkisine sahip olanlar tüm cezaları çekebilir
+    @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") 
+    public ResponseEntity<List<Penalty>> getAllPenalties() {
+        return ResponseEntity.ok(penaltyService.getAllPenalties());
     }
 
     // 1. Kullanıcının tüm ceza detaylarını getirir (Tablo için)

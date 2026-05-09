@@ -33,7 +33,8 @@ async function verileriYukle(userId, token) {
         istatistikleriGuncelle(userId, token),
         gorevListesiniYukle(userId, token),
         sonLoglariYukle(userId, token),
-        cezalariYukle(userId, token)
+        cezalariYukle(userId, token),
+        bildirimleriYukle(userId, token) // BİLDİRİMLER BURAYA EKLENDİ
     ]);
 }
 
@@ -98,7 +99,7 @@ async function istatistikleriGuncelle(userId, token) {
     }
 }
 
-// 2. Ceza Verilerini Yükle - DEBUG MODU EKLENDİ
+// 2. Ceza Verilerini Yükle
 async function cezalariYukle(userId, token) {
     const penaltyList = document.getElementById('penaltyList');
     const totalScoreElement = document.getElementById('totalPenaltyScore');
@@ -116,7 +117,7 @@ async function cezalariYukle(userId, token) {
         const resList = await fetch(`http://localhost:8080/api/penalties/user/${userId}`, { headers });
         const penalties = await handleResponse(resList);
 
-        console.log("Backend'den gelen cezalar:", penalties); // DEBUG: Gelen veriyi konsolda kontrol et
+        console.log("Backend'den gelen cezalar:", penalties); 
 
         penaltyList.innerHTML = '';
 
@@ -249,6 +250,87 @@ async function sonLoglariYukle(userId, token) {
         console.error("Loglar yüklenemedi.");
     }
 }
+
+// --- YENİ EKLENDİ: BİLDİRİM FONKSİYONLARI ---
+
+async function bildirimleriYukle(userId, token) {
+    try {
+        const res = await fetch(`http://localhost:8080/api/notifications/user/${userId}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const notifications = await handleResponse(res);
+        
+        const badge = document.getElementById('notif-badge');
+        const list = document.getElementById('notification-list');
+        
+        if (!notifications || notifications.length === 0) {
+            if (badge) badge.classList.add('d-none');
+            if (list) list.innerHTML = '<p class="text-muted text-center mt-4 small"><i class="fas fa-mug-hot fa-2x opacity-25 mb-2"></i><br>Yeni bildiriminiz yok.</p>';
+            return;
+        }
+
+        // Rozeti (Badge) Güncelle
+        if (badge) {
+            badge.innerText = notifications.length;
+            badge.classList.remove('d-none');
+        }
+
+        // Listeyi Güncelle
+        if (list) {
+            list.innerHTML = '';
+            notifications.reverse().forEach(n => {
+                list.innerHTML += `
+                    <div class="mb-2 p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(0,210,255,0.2);">
+                        <div class="text-white small" style="font-size: 0.85rem;">
+                            <i class="fas fa-info-circle text-info me-2"></i> ${n.message}
+                        </div>
+                        <button class="btn btn-sm btn-link text-white-50" onclick="bildirimOkundu(${n.id})" title="Okundu İşaretle">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+    } catch (err) { 
+        console.error("Bildirimler yüklenemedi", err); 
+    }
+}
+
+function bildirimOkundu(id) {
+    const token = localStorage.getItem('jwtToken');
+    fetch(`http://localhost:8080/api/notifications/${id}/read`, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token }
+    }).then(res => {
+        if(res.ok) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            bildirimleriYukle(user.id, token);
+        }
+    });
+}
+
+function markAllNotificationsAsRead() {
+    const token = localStorage.getItem('jwtToken');
+    const user = JSON.parse(localStorage.getItem('user'));
+    fetch(`http://localhost:8080/api/notifications/user/${user.id}/read-all`, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token }
+    }).then(res => {
+        if(res.ok) {
+            bildirimleriYukle(user.id, token);
+            closeNotificationModal();
+        }
+    });
+}
+
+function openNotificationModal() { document.getElementById('notificationModal').style.display = 'block'; }
+function closeNotificationModal() { document.getElementById('notificationModal').style.display = 'none'; }
+
+// Dashboard Modallarını dışarı tıklayınca kapatma
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('notificationModal');
+    if (e.target == modal) modal.style.display = "none";
+});
 
 function logout() {
     localStorage.clear();

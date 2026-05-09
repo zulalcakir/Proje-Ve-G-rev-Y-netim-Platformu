@@ -14,6 +14,11 @@ public class PenaltyService {
         this.penaltyRepository = penaltyRepository;
     }
 
+    // ADMİN İÇİN YENİ EKLENDİ: Veritabanındaki tüm ceza kayıtlarını getirir
+    public List<Penalty> getAllPenalties() {
+        return penaltyRepository.findAll();
+    }
+
     // Kullanıcının dakika bazlı ceza geçmişini liste olarak döner
     public List<Penalty> getPenaltiesByUserId(Long userId) {
         return penaltyRepository.findByUserId(userId);

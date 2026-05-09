@@ -187,6 +187,25 @@
                 </table>
             </div>
 
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
+                <h4 class="text-white m-0 section-title text-danger" style="border-left-color: #ff007f;">Personel Ceza Sıralaması Liderlik Tablosu</h4>
+            </div>
+
+            <div class="table-responsive mb-5 shadow-lg" style="background: rgba(255,0,127,0.05); border-radius: 15px; border: 1px solid rgba(255,0,127,0.2);">
+                <table class="table table-dark table-hover align-middle m-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th class="ps-4">SIRA</th>
+                            <th>PERSONEL</th>
+                            <th>TOPLAM CEZA</th>
+                            <th>SON İHLAL (GÖREV / PROJE)</th>
+                            <th>GECİKME SEBEBİ / SÜRE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminPenaltyTable">
+                        </tbody>
+                </table>
+            </div>
             <h4 class="text-white mb-3 section-title">Sistem İşlem Günlüğü</h4>
             <div class="log-box" id="systemLogs">
                 <div class="text-success small">[SİSTEM]: Veri bağlantısı doğrulanıyor...</div>
@@ -265,6 +284,13 @@
                     <label class="text-white-50 small mb-1 ms-1">Son Teslim Tarihi</label>
                     <input type="datetime-local" id="task-deadline" class="cool-input" required>
                 </div>
+                
+                <div class="mb-3">
+                    <label class="text-white-50 small mb-1 ms-1">Görev Önceliği</label>
+                    <select id="task-priority" class="cool-input" required>
+                        </select>
+                </div>
+
                 <div class="mb-4">
                     <label class="text-white-50 small mb-1 ms-1">Görevlendirilecek Personel</label>
                     <select id="task-user" class="cool-input" required>

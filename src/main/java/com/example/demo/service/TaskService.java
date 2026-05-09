@@ -18,6 +18,10 @@ public class TaskService {
     @Autowired
     private ActivityLogService logService; // İşlemleri loglamak için
 
+    // YENİ EKLENDİ: Bildirim servisini buraya dahil ediyoruz
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * Tüm görevleri listeler. 
      * Modeller EAGER olduğu için ilişkili Proje ve Kullanıcı verileri de dolu gelir.
@@ -56,10 +60,13 @@ public class TaskService {
         boolean isNew = (task.getId() == null);
         Task savedTask = taskRepository.save(task);
         
-        // Sadece yeni bir görev atandığında log oluştur
+        // Sadece yeni bir görev atandığında log ve bildirim oluştur
         if (isNew && savedTask.getAssignedTo() != null) {
             String logMsg = "Yeni görev atandı: '" + savedTask.getTitle() + "' (Proje: " + savedTask.getProject().getName() + ")";
             logService.logAction(logMsg, savedTask.getAssignedTo());
+            
+            // YENİ EKLENDİ: Personele anlık bildirim gönder
+            notificationService.sendNotification(savedTask.getAssignedTo(), "Yeni bir görev atandı: " + savedTask.getTitle());
         }
         
         return savedTask;

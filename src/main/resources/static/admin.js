@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('jwtToken');
     
-    // Token yoksa veya 'null' metni kalmışsa temizle ve login'e at
     if (!storedUser || !token || token === "null") {
         localStorage.clear();
         window.location.href = 'index.html';
@@ -87,18 +86,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // C - Görev Atama
+    // C - Görev Atama (Priority Eklendi!)
     const adminAddTaskForm = document.getElementById('adminAddTaskForm');
     if(adminAddTaskForm) {
         adminAddTaskForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // DİKKAT: Artık priority bilgisini de alıyoruz
             const newTask = {
                 title: document.getElementById('task-title').value,
                 description: document.getElementById('task-desc').value,
                 dueDate: document.getElementById('task-deadline').value,
                 status: 'BEKLEMEDE',
                 project: { id: parseInt(document.getElementById('task-project').value) },
-                assignedTo: { id: parseInt(document.getElementById('task-user').value) }
+                assignedTo: { id: parseInt(document.getElementById('task-user').value) },
+                priority: { id: parseInt(document.getElementById('task-priority').value) } // YENİ EKLENDİ
             };
 
             fetch('http://localhost:8080/api/tasks', {
@@ -117,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // D - Yorum Gönderme Formu (Admin için) YENİ EKLENDİ
+    // D - Yorum Gönderme Formu (Admin için)
     const addCommentForm = document.getElementById('addCommentForm');
     if(addCommentForm) {
         addCommentForm.addEventListener('submit', function(e) {
@@ -167,7 +169,8 @@ function verileriTazele(token) {
     kullaniciTablosunuYukle(token);
     projeleriYukle(token); 
     loglariYukle(token);
-    gorevTablosunuYukle(token); // YENİ EKLENDİ
+    gorevTablosunuYukle(token);
+    cezaSiralamasiniYukle(token); // CEZA EKLENDİ
 }
 
 // --- VERİ YÜKLEME FONKSİYONLARI ---
@@ -217,7 +220,6 @@ function projeleriYukle(token) {
         if(!tbody || !projects) return;
         tbody.innerHTML = '';
 
-        // --- ÇİFT KAYITLARI ENGELLEME (UNIQUE FILTER) ---
         const uniqueProjects = [];
         const seenIds = new Set();
         projects.forEach(p => {
@@ -246,7 +248,6 @@ function projeleriYukle(token) {
     });
 }
 
-// YENİ EKLENDİ: Tüm görevleri çeken ve tabloya basan fonksiyon
 function gorevTablosunuYukle(token) {
     fetch('http://localhost:8080/api/tasks', { headers: { 'Authorization': 'Bearer ' + token } })
     .then(handleResponse)
@@ -274,6 +275,76 @@ function gorevTablosunuYukle(token) {
                 </tr>`;
         });
     });
+}
+
+// --- YENİ EKLENDİ: CEZA SIRALAMASI YÜKLEME ---
+function cezaSiralamasiniYukle(token) {
+    fetch('http://localhost:8080/api/penalties', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(handleResponse)
+    .then(penalties => {
+        const tbody = document.getElementById('adminPenaltyTable');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        
+        if(!penalties || penalties.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Sistemde henüz kimse ceza almamış. Harika!</td></tr>';
+            return;
+        }
+
+        const userPenalties = {};
+        
+        penalties.forEach(p => {
+            if(!p.user) return; 
+            const uid = p.user.id;
+            
+            if(!userPenalties[uid]) {
+                userPenalties[uid] = {
+                    user: p.user,
+                    totalScore: 0,
+                    latestPenalty: null 
+                };
+            }
+            
+            userPenalties[uid].totalScore += p.penaltyScore;
+            
+            if(!userPenalties[uid].latestPenalty || new Date(p.penaltyDate) > new Date(userPenalties[uid].latestPenalty.penaltyDate)) {
+                userPenalties[uid].latestPenalty = p;
+            }
+        });
+
+        const sortedUsers = Object.values(userPenalties).sort((a, b) => b.totalScore - a.totalScore);
+
+        let sira = 1;
+        sortedUsers.forEach(data => {
+            const userName = data.user.fullName || data.user.username;
+            const lp = data.latestPenalty; 
+            
+            const taskName = lp.task ? lp.task.title : 'Genel İhlal';
+            const projectName = (lp.task && lp.task.project) ? lp.task.project.name : 'Genel';
+            const reason = lp.reason || 'Belirtilmedi';
+            
+            let siraGorseli = sira;
+            if(sira === 1) siraGorseli = '<i class="fas fa-fire text-danger fa-lg"></i>';
+            else if(sira === 2) siraGorseli = '<i class="fas fa-exclamation-triangle text-warning"></i>';
+            
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td class="ps-4 fw-bold text-white-50 fs-5">${siraGorseli}</td>
+                    <td class="fw-bold text-info">@${userName}</td>
+                    <td><span class="badge bg-danger bg-opacity-25 text-danger px-3 py-2 fs-6">-${data.totalScore} Puan</span></td>
+                    <td class="small text-white-50">
+                        <strong class="text-white">${taskName}</strong><br>
+                        <span class="text-muted" style="font-size:0.7rem;">Proje: ${projectName}</span>
+                    </td>
+                    <td class="small text-warning" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${reason}">
+                        ${reason}
+                    </td>
+                </tr>
+            `;
+            sira++;
+        });
+    })
+    .catch(err => console.warn("Ceza liderlik tablosu yüklenemedi", err));
 }
 
 function loglariYukle(token) {
@@ -309,10 +380,10 @@ function openTaskModal() {
     document.getElementById('taskModal').style.display = 'block';
     populatePersonelSelect('task-user');
     populateProjectSelect('task-project');
+    populatePrioritySelect('task-priority'); // YENİ EKLENDİ
 }
 function closeTaskModal() { document.getElementById('taskModal').style.display = 'none'; }
 
-// YENİ EKLENDİ: YORUM VE DETAY MODALI İŞLEMLERİ (Admin için)
 function openTaskDetailModal(taskId) {
     document.getElementById('taskDetailModal').style.display = 'block';
     document.getElementById('comment-task-id').value = taskId;
@@ -331,29 +402,7 @@ function openTaskDetailModal(taskId) {
 
 function closeTaskDetailModal() { document.getElementById('taskDetailModal').style.display = 'none'; }
 
-function yorumlariYukle(taskId, token) {
-    const container = document.getElementById('comments-container');
-    container.innerHTML = '<p class="text-muted small text-center mt-3">Yükleniyor...</p>';
-
-    fetch(`http://localhost:8080/api/comments/task/${taskId}`, { headers: { 'Authorization': 'Bearer ' + token } })
-        .then(res => res.json())
-        .then(comments => {
-            container.innerHTML = '';
-            if (comments.length === 0) {
-                container.innerHTML = '<p class="text-muted small text-center mt-3">Henüz yorum yok.</p>';
-                return;
-            }
-            comments.forEach(c => {
-                const username = c.user ? (c.user.fullName || c.user.username) : 'Sistem';
-                container.innerHTML += `
-                    <div class="mb-2 p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                        <small class="text-info fw-bold">${username}:</small>
-                        <p class="m-0 text-white small opacity-75">${c.content}</p>
-                    </div>`;
-            });
-            container.scrollTop = container.scrollHeight;
-        });
-}
+// DİNAMİK VERİ DOLDURMA FONKSİYONLARI
 
 function populatePersonelSelect(elementId) {
     const select = document.getElementById(elementId);
@@ -375,8 +424,6 @@ function populateProjectSelect(elementId) {
     .then(handleResponse).then(projects => {
         if(!projects) return;
         select.innerHTML = '<option value="">Proje Seçin...</option>';
-        
-        // Burayı da tekilleştiriyoruz ki select içinde de çift görünmesin
         const seenIds = new Set();
         projects.forEach(p => {
             if (!seenIds.has(p.id)) {
@@ -387,28 +434,61 @@ function populateProjectSelect(elementId) {
     });
 }
 
+function populatePrioritySelect(elementId) {
+    const select = document.getElementById(elementId);
+    if(!select) return;
+    const token = localStorage.getItem('jwtToken');
+    fetch('http://localhost:8080/api/priorities', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(handleResponse).then(priorities => {
+        if(!priorities) return;
+        select.innerHTML = '<option value="">Öncelik Belirleyin...</option>';
+        priorities.forEach(p => {
+            const priorityName = p.level || p.name || `Seviye ${p.id}`;
+            select.innerHTML += `<option value="${p.id}">${priorityName}</option>`;
+        });
+    });
+}
+
+function yorumlariYukle(taskId, token) {
+    const container = document.getElementById('comments-container');
+    container.innerHTML = '<p class="text-muted small text-center mt-3">Yükleniyor...</p>';
+    fetch(`http://localhost:8080/api/comments/task/${taskId}`, { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(res => res.json())
+    .then(comments => {
+        container.innerHTML = '';
+        if (comments.length === 0) {
+            container.innerHTML = '<p class="text-muted small text-center mt-3">Henüz yorum yok.</p>';
+            return;
+        }
+        comments.forEach(c => {
+            const username = c.user ? (c.user.fullName || c.user.username) : 'Sistem';
+            container.innerHTML += `
+                <div class="mb-2 p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                    <small class="text-info fw-bold">${username}:</small>
+                    <p class="m-0 text-white small opacity-75">${c.content}</p>
+                </div>`;
+        });
+        container.scrollTop = container.scrollHeight;
+    });
+}
+
 function kullaniciSil(id) {
     if(!confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) return;
     const token = localStorage.getItem('jwtToken');
-    fetch(`http://localhost:8080/api/users/${id}`, { 
-        method: 'DELETE', 
-        headers: { 'Authorization': 'Bearer ' + token } 
-    }).then(res => { if(res.ok) verileriTazele(token); });
+    fetch(`http://localhost:8080/api/users/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } })
+    .then(res => { if(res.ok) verileriTazele(token); });
 }
 
 function deleteProject(id) {
     if(!confirm('Bu projeyi silmek istediğinize emin misiniz?')) return;
     const token = localStorage.getItem('jwtToken');
-    fetch(`http://localhost:8080/api/projects/${id}`, { 
-        method: 'DELETE', 
-        headers: { 'Authorization': 'Bearer ' + token } 
-    }).then(res => { if(res.ok) verileriTazele(token); });
+    fetch(`http://localhost:8080/api/projects/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } })
+    .then(res => { if(res.ok) verileriTazele(token); });
 }
 
 function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
 window.onclick = (e) => {
-    // taskDetailModal de bu diziye eklendi
     ['userModal', 'projectModal', 'taskModal', 'taskDetailModal'].forEach(mId => {
         const m = document.getElementById(mId);
         if (m && e.target == m) m.style.display = "none";
