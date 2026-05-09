@@ -116,6 +116,35 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => alert("Görev Atama Hatası: " + err.message));
         });
     }
+
+    // D - Yorum Gönderme Formu (Admin için) YENİ EKLENDİ
+    const addCommentForm = document.getElementById('addCommentForm');
+    if(addCommentForm) {
+        addCommentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const taskId = document.getElementById('comment-task-id').value;
+            const contentInput = document.getElementById('new-comment-text');
+            const commentToken = localStorage.getItem('jwtToken');
+            const commentUser = JSON.parse(localStorage.getItem('user'));
+
+            const commentData = {
+                content: contentInput.value,
+                task: { id: parseInt(taskId) },
+                user: { id: commentUser.id }
+            };
+
+            fetch('http://localhost:8080/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + commentToken },
+                body: JSON.stringify(commentData)
+            }).then(res => {
+                if(res.ok) {
+                    contentInput.value = '';
+                    yorumlariYukle(taskId, commentToken);
+                }
+            });
+        });
+    }
 });
 
 // --- MERKEZİ YANIT VE HATA YÖNETİCİSİ ---
@@ -138,6 +167,7 @@ function verileriTazele(token) {
     kullaniciTablosunuYukle(token);
     projeleriYukle(token); 
     loglariYukle(token);
+    gorevTablosunuYukle(token); // YENİ EKLENDİ
 }
 
 // --- VERİ YÜKLEME FONKSİYONLARI ---
@@ -216,6 +246,36 @@ function projeleriYukle(token) {
     });
 }
 
+// YENİ EKLENDİ: Tüm görevleri çeken ve tabloya basan fonksiyon
+function gorevTablosunuYukle(token) {
+    fetch('http://localhost:8080/api/tasks', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(handleResponse)
+    .then(tasks => {
+        const tbody = document.getElementById('adminTaskTable');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        tasks.forEach(t => {
+            const date = t.dueDate ? new Date(t.dueDate).toLocaleDateString('tr-TR') : '-';
+            const person = t.assignedTo ? (t.assignedTo.fullName || t.assignedTo.username) : 'Atanmamış';
+            const statusClass = t.status === 'TAMAMLANDI' ? 'text-success' : (t.status === 'DEVAM_EDIYOR' ? 'text-info' : 'text-warning');
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td class="ps-4 fw-bold text-white">${t.title}</td>
+                    <td class="small">${t.project ? t.project.name : 'Genel'}</td>
+                    <td class="text-info small">@${person}</td>
+                    <td class="${statusClass} fw-bold small">${t.status}</td>
+                    <td class="small text-muted">${date}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-info border-0" onclick="openTaskDetailModal(${t.id})">
+                            <i class="fas fa-comment-dots"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
+
 function loglariYukle(token) {
     const logContainer = document.getElementById('systemLogs');
     if(!logContainer) return;
@@ -251,6 +311,49 @@ function openTaskModal() {
     populateProjectSelect('task-project');
 }
 function closeTaskModal() { document.getElementById('taskModal').style.display = 'none'; }
+
+// YENİ EKLENDİ: YORUM VE DETAY MODALI İŞLEMLERİ (Admin için)
+function openTaskDetailModal(taskId) {
+    document.getElementById('taskDetailModal').style.display = 'block';
+    document.getElementById('comment-task-id').value = taskId;
+    const token = localStorage.getItem('jwtToken');
+
+    fetch(`http://localhost:8080/api/tasks/${taskId}`, { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(res => res.json())
+        .then(task => {
+            document.getElementById('modal-task-title').innerText = task.title;
+            document.getElementById('modal-task-project').innerText = task.project ? task.project.name : 'Genel';
+            document.getElementById('modal-task-desc').innerText = task.description || 'Detay girilmemiş.';
+        });
+
+    yorumlariYukle(taskId, token);
+}
+
+function closeTaskDetailModal() { document.getElementById('taskDetailModal').style.display = 'none'; }
+
+function yorumlariYukle(taskId, token) {
+    const container = document.getElementById('comments-container');
+    container.innerHTML = '<p class="text-muted small text-center mt-3">Yükleniyor...</p>';
+
+    fetch(`http://localhost:8080/api/comments/task/${taskId}`, { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(res => res.json())
+        .then(comments => {
+            container.innerHTML = '';
+            if (comments.length === 0) {
+                container.innerHTML = '<p class="text-muted small text-center mt-3">Henüz yorum yok.</p>';
+                return;
+            }
+            comments.forEach(c => {
+                const username = c.user ? (c.user.fullName || c.user.username) : 'Sistem';
+                container.innerHTML += `
+                    <div class="mb-2 p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                        <small class="text-info fw-bold">${username}:</small>
+                        <p class="m-0 text-white small opacity-75">${c.content}</p>
+                    </div>`;
+            });
+            container.scrollTop = container.scrollHeight;
+        });
+}
 
 function populatePersonelSelect(elementId) {
     const select = document.getElementById(elementId);
@@ -305,7 +408,8 @@ function deleteProject(id) {
 function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
 window.onclick = (e) => {
-    ['userModal', 'projectModal', 'taskModal'].forEach(mId => {
+    // taskDetailModal de bu diziye eklendi
+    ['userModal', 'projectModal', 'taskModal', 'taskDetailModal'].forEach(mId => {
         const m = document.getElementById(mId);
         if (m && e.target == m) m.style.display = "none";
     });

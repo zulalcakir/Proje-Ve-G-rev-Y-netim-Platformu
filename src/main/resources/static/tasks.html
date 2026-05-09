@@ -25,11 +25,20 @@
             cursor: pointer;
             transition: 0.3s;
         }
-        .task-card:hover { background: rgba(255, 255, 255, 0.1); border-color: #00d2ff; }
+        .task-card:hover { background: rgba(255, 255, 255, 0.1); border-color: #00d2ff; transform: translateY(-3px); }
         .column-title { font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; display: flex; align-items: center; }
         .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
         .cyber-menu-item { border-radius: 12px; padding: 12px 20px !important; margin-bottom: 5px; color: rgba(255,255,255,0.7) !important; transition: 0.3s; display: flex; align-items: center; }
         .cyber-menu-item:hover, .cyber-menu-item.active { background: rgba(255, 255, 255, 0.1); color: #fff !important; }
+        
+        /* --- YENİ EKLENEN: MODAL (AÇILIR PENCERE) STİLLERİ --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); }
+        .modal-content { margin: 5% auto; border: none; width: 90%; max-width: 600px; animation: slideDown 0.4s ease-out; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; }
+        .close-btn { position: absolute; right: 25px; top: 15px; color: rgba(255, 255, 255, 0.5); font-size: 30px; cursor: pointer; transition: 0.3s; z-index: 100; }
+        .close-btn:hover { color: #ff007f; }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        #comments-container::-webkit-scrollbar { width: 5px; }
+        #comments-container::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -84,6 +93,34 @@
             </div>
         </div>
     </div>
+
+    <div id="taskDetailModal" class="modal">
+        <div class="glass-card modal-content p-4 p-md-5 position-relative">
+            <span class="close-btn" onclick="closeTaskDetailModal()">&times;</span>
+            
+            <div class="mb-3">
+                <span id="modal-task-project" class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 mb-2">Proje Adı</span>
+                <h3 id="modal-task-title" class="cool-title mb-2 text-white" style="font-size: 1.5rem;">Görev Başlığı</h3>
+                <p id="modal-task-desc" class="text-white-50 small mb-4" style="line-height: 1.5;">Açıklama yükleniyor...</p>
+            </div>
+
+            <h6 class="text-white mb-3 border-left border-info ps-2 section-title" style="font-size: 0.9rem; border-left: 3px solid #00d2ff;">Yorumlar ve Notlar</h6>
+            
+            <div id="comments-container" class="mb-4 pe-2" style="max-height: 250px; overflow-y: auto;">
+                </div>
+
+            <form id="addCommentForm" class="mt-auto">
+                <input type="hidden" id="comment-task-id">
+                <div class="input-group">
+                    <input type="text" id="new-comment-text" class="form-control cool-input" placeholder="Görevle ilgili bir not veya ilerleme yazın..." required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px 0 0 12px; font-size: 0.85rem;">
+                    <button type="submit" class="btn btn-info px-4 fw-bold text-white" style="border-radius: 0 12px 12px 0; background: linear-gradient(45deg, #00d2ff, #3a7bd5); border: none;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="tasks.js"></script>
 </body>
 </html>

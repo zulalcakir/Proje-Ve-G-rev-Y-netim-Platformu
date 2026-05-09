@@ -166,6 +166,27 @@
                 </table>
             </div>
 
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
+                <h4 class="text-white m-0 section-title">Tüm Görevlerin Takibi</h4>
+            </div>
+
+            <div class="table-responsive mb-5 shadow-lg" style="background: rgba(0,0,0,0.2); border-radius: 15px;">
+                <table class="table table-dark table-hover align-middle m-0">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th class="ps-4">GÖREV BAŞLIĞI</th>
+                            <th>PROJE</th>
+                            <th>PERSONEL</th>
+                            <th>DURUM</th>
+                            <th>SON TARİH</th>
+                            <th class="text-center">DETAY / YORUM</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTaskTable">
+                        </tbody>
+                </table>
+            </div>
+
             <h4 class="text-white mb-3 section-title">Sistem İşlem Günlüğü</h4>
             <div class="log-box" id="systemLogs">
                 <div class="text-success small">[SİSTEM]: Veri bağlantısı doğrulanıyor...</div>
@@ -250,6 +271,26 @@
                         </select>
                 </div>
                 <button type="submit" class="cyber-btn w-100" style="background: linear-gradient(45deg, #7928ca, #ff007f);">GÖREVİ GÖNDER</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="taskDetailModal" class="modal">
+        <div class="glass-card modal-content p-4 p-md-5 position-relative">
+            <span class="close-btn" onclick="closeTaskDetailModal()" style="position: absolute; right: 25px; top: 15px; cursor: pointer; font-size: 25px;">&times;</span>
+            <div class="mb-3">
+                <span id="modal-task-project" class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 mb-2">Proje</span>
+                <h3 id="modal-task-title" class="cool-title mb-2 text-white" style="font-size: 1.5rem;">Görev</h3>
+                <p id="modal-task-desc" class="text-white-50 small mb-4">Açıklama...</p>
+            </div>
+            <h6 class="text-white mb-3 border-left border-info ps-2" style="border-left: 3px solid #ff416c;">Yorumlar ve Notlar</h6>
+            <div id="comments-container" class="mb-4 pe-2" style="max-height: 250px; overflow-y: auto;"></div>
+            <form id="addCommentForm" class="mt-auto">
+                <input type="hidden" id="comment-task-id">
+                <div class="input-group">
+                    <input type="text" id="new-comment-text" class="form-control cool-input" placeholder="Yönetici notu ekleyin..." required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color:white;">
+                    <button type="submit" class="btn btn-danger px-4 fw-bold text-white">GÖNDER</button>
+                </div>
             </form>
         </div>
     </div>
