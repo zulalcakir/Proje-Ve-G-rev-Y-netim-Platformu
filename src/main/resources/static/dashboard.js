@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 1. Tarayıcı hafızasından giriş yapan kullanıcıyı ve token'ı al
     const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('jwtToken'); // Token'ı alıyoruz
+    const token = localStorage.getItem('jwtToken');
     
-    // Eğer giriş yapılmamışsa veya token yoksa login sayfasına geri gönder
+    // Güvenlik Kontrolü
     if (!storedUser || !token) {
         window.location.href = 'index.html';
         return;
@@ -11,31 +11,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const currentUser = JSON.parse(storedUser);
 
-    // 2. Arayüzdeki isim alanlarını güncelle
+    // 2. Arayüzü Kullanıcı Bilgileriyle Doldur
     updateUserInterface(currentUser);
 
-    // 3. Verileri SADECE bu kullanıcıya özel olarak ve TOKEN ile çek
+    // 3. Verileri Yeni API Uçlarından Çek
     istatistikleriGuncelle(currentUser.id, token);
     gorevListesiniYukle(currentUser.id, token);
     sonLoglariYukle(currentUser.id, token);
 });
 
-// Arayüzdeki isim ve profil kısımlarını dolduran fonksiyon
+// Arayüzdeki isim, profil ve avatar kısımlarını dolduran fonksiyon
 function updateUserInterface(user) {
-    // Hoş geldin mesajı
-    const welcomeTitle = document.querySelector('.header-section h2');
-    if (welcomeTitle) {
-        welcomeTitle.innerHTML = `Hoş Geldin, ${user.fullName || user.username}! 👋`;
+    // Hoş geldin mesajı ve sol profil alanı
+    document.getElementById('welcome-name').innerText = user.fullName || user.username;
+    document.getElementById('user-full-name').innerText = user.fullName || user.username;
+    
+    // Avatar baş harfi
+    const avatar = document.getElementById('user-avatar');
+    if (avatar) {
+        avatar.innerText = (user.fullName || user.username).charAt(0).toUpperCase();
     }
 
-    // Sol alttaki profil ismi
-    const profileName = document.querySelector('.profile-section p.fw-bold');
-    if (profileName) {
-        profileName.innerText = user.fullName || user.username;
+    // Rol etiketini belirle
+    const roleLabel = document.getElementById('user-role-label');
+    if (roleLabel) {
+        const isAdmin = user.roles && user.roles.some(r => r.name === 'ROLE_ADMIN');
+        roleLabel.innerText = isAdmin ? 'Yönetici' : 'Üye';
     }
 }
 
-// Fetch istekleri için ortak başlık (Header) hazırlayıcı
+// Ortak Header Hazırlayıcı
 function getAuthHeaders(token) {
     return {
         'Authorization': 'Bearer ' + token,
@@ -43,107 +48,126 @@ function getAuthHeaders(token) {
     };
 }
 
-// 1. İstatistikleri SADECE Kullanıcıya Göre Filtrele
+// 1. İstatistikleri Güncelle (Optimize Edilmiş)
 function istatistikleriGuncelle(userId, token) {
-    // Sadece benim projelerimi say
+    // Proje sayısı (Yine filtreleme ile, ilerde buna da özel API yazılabilir)
     fetch('http://localhost:8080/api/projects', { headers: getAuthHeaders(token) })
-        .then(res => {
-            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
-            return res.json();
-        })
+        .then(res => res.json())
         .then(projeler => {
-            const benimProjelerim = projeler.filter(p => p.createdBy && p.createdBy.id === userId);
-            document.getElementById('proje-sayisi').innerText = benimProjelerim.length;
-        })
-        .catch(err => console.error("Proje sayıları alınamadı:", err));
+            document.getElementById('proje-sayisi').innerText = projeler.length;
+        });
 
-    // Sadece benim görevlerimi say
-    fetch('http://localhost:8080/api/tasks', { headers: getAuthHeaders(token) })
-        .then(res => {
-            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
-            return res.json();
-        })
+    // Görev Sayıları (Backend'deki kullanıcıya özel uçtan çekiliyor)
+    fetch(`http://localhost:8080/api/tasks/user/${userId}`, { headers: getAuthHeaders(token) })
+        .then(res => res.json())
         .then(gorevler => {
-            // Sadece bu kullanıcıya atanmış görevler
-            const benimGorevlerim = gorevler.filter(g => g.assignedTo && g.assignedTo.id === userId);
-            document.getElementById('gorev-sayisi').innerText = benimGorevlerim.length;
+            const bekleyenler = gorevler.filter(g => g.status !== 'TAMAMLANDI');
+            const tamamlananlar = gorevler.filter(g => g.status === 'TAMAMLANDI');
             
-            const tamamlananlar = benimGorevlerim.filter(g => g.status === 'Tamamlandı' || g.status === 'Completed');
+            document.getElementById('gorev-sayisi').innerText = bekleyenler.length;
             document.getElementById('tamamlanan-sayisi').innerText = tamamlananlar.length;
-        })
-        .catch(err => console.error("Görev sayıları alınamadı:", err));
-}
-
-// 2. SADECE Kullanıcının Kendi Görevlerini Yükle
-function gorevListesiniYukle(userId, token) {
-    const container = document.getElementById('task-list-container');
-
-    fetch('http://localhost:8080/api/tasks', { headers: getAuthHeaders(token) })
-        .then(res => {
-            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
-            return res.json();
-        })
-        .then(gorevler => {
-            container.innerHTML = '';
-
-            const benimGorevlerim = gorevler.filter(g => g.assignedTo && g.assignedTo.id === userId);
-
-            if (benimGorevlerim.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center mt-5">Henüz sana atanmış bir görev yok.</p>';
-                return;
-            }
-
-            benimGorevlerim.slice(-4).reverse().forEach(task => {
-                const badgeClass = task.status === 'Tamamlandı' ? 'bg-success' : 'bg-info';
-                
-                container.innerHTML += `
-                    <div class="stat-box d-flex justify-content-between align-items-center p-3 mb-2 rounded-3">
-                        <div>
-                            <h6 class="text-white mb-1 fw-bold">${task.title}</h6>
-                            <small class="subtitle">${task.description || 'Açıklama yok'}</small>
-                        </div>
-                        <span class="badge ${badgeClass} rounded-pill px-3 py-2">${task.status || 'Aktif'}</span>
-                    </div>
-                `;
-            });
-        })
-        .catch(err => {
-            container.innerHTML = '<p class="text-danger text-center mt-5">Görevler yüklenirken hata oluştu.</p>';
         });
 }
 
-// 3. SADECE Kullanıcının Kendi İşlem Loglarını Yükle
+// 2. Tabloya Görevleri Yükle (Yeni API Ucu: /api/tasks/user/{userId})
+function gorevListesiniYukle(userId, token) {
+    const taskList = document.getElementById('task-list');
+
+    fetch(`http://localhost:8080/api/tasks/user/${userId}`, { headers: getAuthHeaders(token) })
+        .then(res => res.json())
+        .then(gorevler => {
+            taskList.innerHTML = '';
+
+            if (gorevler.length === 0) {
+                document.getElementById('no-task-message').classList.remove('d-none');
+                return;
+            }
+
+            gorevler.slice(-6).reverse().forEach(task => {
+                const statusBadge = getStatusBadge(task.status);
+                const date = task.dueDate ? new Date(task.dueDate).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Belirtilmedi';
+                
+                taskList.innerHTML += `
+                    <tr class="task-row" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="py-3">
+                            <div class="fw-bold text-white">${task.title}</div>
+                            <div class="text-muted small">${task.description || ''}</div>
+                        </td>
+                        <td><span class="text-info opacity-75">${task.project ? task.project.name : '-'}</span></td>
+                        <td class="small text-white-50">${date}</td>
+                        <td>${statusBadge}</td>
+                        <td class="text-center">
+                            ${task.status !== 'TAMAMLANDI' ? 
+                                `<button class="btn btn-sm btn-outline-success border-0" onclick="updateStatus(${task.id}, 'TAMAMLANDI')">
+                                    <i class="fas fa-check"></i>
+                                 </button>` : 
+                                `<i class="fas fa-check-circle text-success"></i>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+}
+
+// Durum Güncelleme (Yeni PATCH API Ucu)
+function updateStatus(taskId, newStatus) {
+    const token = localStorage.getItem('jwtToken');
+    
+    fetch(`http://localhost:8080/api/tasks/${taskId}/status?newStatus=${newStatus}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(token)
+    })
+    .then(response => {
+        if(response.ok) {
+            // Sayfayı yenilemeden veriyi tazele
+            const user = JSON.parse(localStorage.getItem('user'));
+            istatistikleriGuncelle(user.id, token);
+            gorevListesiniYukle(user.id, token);
+            sonLoglariYukle(user.id, token);
+        }
+    });
+}
+
+// Durum badge'i için yardımcı fonksiyon
+function getStatusBadge(status) {
+    switch(status) {
+        case 'TAMAMLANDI': return '<span class="badge-status bg-success bg-opacity-25 text-success border border-success border-opacity-25">TAMAMLANDI</span>';
+        case 'DEVAM_EDIYOR': return '<span class="badge-status bg-info bg-opacity-25 text-info border border-info border-opacity-25">DEVAM EDİYOR</span>';
+        case 'BEKLEMEDE': return '<span class="badge-status bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25">BEKLEMEDE</span>';
+        default: return `<span class="badge-status bg-secondary opacity-50">${status}</span>`;
+    }
+}
+
+// 3. Son İşlem Loglarını Yükle
 function sonLoglariYukle(userId, token) {
     const logBox = document.getElementById('recent-logs');
 
     fetch('http://localhost:8080/api/logs', { headers: getAuthHeaders(token) })
-        .then(res => {
-            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
-            return res.json();
-        })
+        .then(res => res.json())
         .then(logs => {
             logBox.innerHTML = '';
-
-            // KRİTİK FİLTRE: Sadece bu kullanıcıya ait loglar
             const benimLoglarim = logs.filter(log => log.user && log.user.id === userId);
 
             if (benimLoglarim.length === 0) {
-                logBox.innerHTML = '<p class="text-muted" style="font-size: 0.8rem;">Henüz bir hareketin yok.</p>';
+                logBox.innerHTML = '<p class="text-muted text-center mt-4 small">Henüz bir hareket yok.</p>';
                 return;
             }
 
-            benimLoglarim.slice(-6).reverse().forEach(log => {
+            benimLoglarim.slice(-10).reverse().forEach(log => {
                 const zaman = new Date(log.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-                
                 logBox.innerHTML += `
-                    <div class="mb-2 p-2 border-bottom border-white border-opacity-10" style="font-size: 0.85rem;">
+                    <div class="activity-item">
                         <span class="text-info fw-bold">[${zaman}]</span>
                         <span class="text-white-50 ms-2">${log.action}</span>
                     </div>
                 `;
             });
-        })
-        .catch(err => {
-            logBox.innerHTML = '<p class="text-danger">Loglar yüklenirken bir hata oluştu.</p>';
         });
+}
+
+// Çıkış Fonksiyonu
+function logout() {
+    localStorage.clear();
+    window.location.href = 'index.html';
 }
