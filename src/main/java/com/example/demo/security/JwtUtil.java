@@ -38,6 +38,11 @@ public class JwtUtil {
         return extractClaims(token).getSubject();
     }
 
+    // YENİ EKLENEN METOT: Token içinden rol bilgisini okur
+    public String extractRole(String token) {
+        return extractClaims(token).get("role", String.class);
+    }
+
     // 3. Token'ın süresi dolmuş mu diye kontrol eder
     public boolean isTokenExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());

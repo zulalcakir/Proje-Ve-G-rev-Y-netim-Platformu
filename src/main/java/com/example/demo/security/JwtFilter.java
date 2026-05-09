@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -29,12 +31,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String username = null;
         String jwt = null;
+        String role = null; // YENİ: Rolü tutacağımız değişken
 
-        // 2. Token varsa ve 'Bearer ' ile başlıyorsa içinden token'ı ve kullanıcı adını al
+        // 2. Token varsa ve 'Bearer ' ile başlıyorsa içinden token'ı, kullanıcı adını ve rolünü al
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
+                role = jwtUtil.extractRole(jwt); // YENİ: Token içinden rolü alıyoruz
             } catch (Exception e) {
                 System.out.println("Geçersiz veya süresi dolmuş Token!");
             }
@@ -46,9 +50,12 @@ public class JwtFilter extends OncePerRequestFilter {
             // Token'ın bizim sistemimize ait olup olmadığını ve süresini doğrula
             if (jwtUtil.validateToken(jwt, username)) {
                 
-                // Her şey yolundaysa Spring Security'ye "Bu adam güvenilir, içeri al" diyoruz
+                // YENİ: Spring Security'ye kullanıcının rolünü tanıtıyoruz
+                List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+                
+                // Her şey yolundaysa Spring Security'ye "Bu adam güvenilir, yetkileriyle içeri al" diyoruz
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        username, null, Collections.emptyList());
+                        username, null, authorities); // Yetkiler (role) eklendi
                 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
