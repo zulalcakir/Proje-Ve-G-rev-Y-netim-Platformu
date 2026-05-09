@@ -25,6 +25,12 @@ function switchForm(formType) {
     document.getElementById('userForm').style.display = 'none';
     document.getElementById('adminForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
+    
+    // Şifre sıfırlama ekranını gizle ve üst butonları geri getir
+    const resetSection = document.getElementById('resetSection');
+    const formButtons = document.getElementById('form-buttons');
+    if(resetSection) resetSection.style.display = 'none';
+    if(formButtons) formButtons.style.display = 'flex';
 
     document.getElementById('btn-user').classList.remove('active');
     document.getElementById('btn-admin').classList.remove('active');
@@ -42,6 +48,79 @@ function switchForm(formType) {
     }
 }
 
+// --- YENİ EKLENDİ: ŞİFRE SIFIRLAMA (FORGOT PASSWORD) İŞLEMLERİ ---
+
+function showResetSection() {
+    // Tüm formları ve üstteki geçiş butonlarını gizle
+    document.getElementById('userForm').style.display = 'none';
+    document.getElementById('adminForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('form-buttons').style.display = 'none';
+    
+    // Mesaj kutusunu temizle ve Sıfırlama alanını göster
+    const msgDiv = document.getElementById('auth-message');
+    if (msgDiv) msgDiv.style.display = 'none';
+    document.getElementById('resetSection').style.display = 'block';
+}
+
+function requestResetCode() {
+    const email = document.getElementById('reset-email').value;
+    if(!email) {
+        showAuthMessage("Lütfen kayıtlı e-posta adresinizi girin.", true);
+        return;
+    }
+
+    fetch('http://localhost:8080/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+    }).then(async res => {
+        const msg = await res.text();
+        if(res.ok) {
+            showAuthMessage(msg, false);
+            // Başarılıysa 1. adımı gizle, 2. adımı (kod ve yeni şifre girme alanı) göster
+            document.getElementById('forgot-step-1').style.display = 'none';
+            document.getElementById('forgot-step-2').style.display = 'block';
+        } else {
+            showAuthMessage(msg, true);
+        }
+    }).catch(err => showAuthMessage("Sunucuya ulaşılamadı.", true));
+}
+
+function performPasswordReset() {
+    const token = document.getElementById('reset-token').value;
+    const newPassword = document.getElementById('reset-new-password').value;
+    
+    if(!token || !newPassword) {
+        showAuthMessage("Lütfen doğrulama kodunu ve yeni şifrenizi girin.", true);
+        return;
+    }
+
+    fetch('http://localhost:8080/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token, newPassword: newPassword })
+    }).then(async res => {
+        const msg = await res.text();
+        if(res.ok) {
+            showAuthMessage("Şifreniz başarıyla güncellendi! Yönlendiriliyorsunuz...", false);
+            
+            // 2 saniye sonra giriş ekranına geri dön ve formları temizle
+            setTimeout(() => {
+                document.getElementById('forgot-step-1').style.display = 'block';
+                document.getElementById('forgot-step-2').style.display = 'none';
+                document.getElementById('reset-email').value = '';
+                document.getElementById('reset-token').value = '';
+                document.getElementById('reset-new-password').value = '';
+                switchForm('user');
+            }, 2000);
+        } else {
+            showAuthMessage(msg, true);
+        }
+    }).catch(err => showAuthMessage("Bağlantı hatası oluştu.", true));
+}
+
+
 document.addEventListener('DOMContentLoaded', function() {
 
     // --- 3. ÜYE GİRİŞİ (BENİ HATIRLA EKLENDİ) ---
@@ -51,22 +130,23 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const usernameInput = document.getElementById('user-username').value;
             const passwordInput = document.getElementById('user-password').value;
-            // YENİ: Checkbox durumunu oku
             const rememberMeInput = document.getElementById('user-remember').checked;
 
             fetch('http://localhost:8080/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // YENİ: rememberMe bilgisini body'ye ekle
                 body: JSON.stringify({ 
                     username: usernameInput, 
                     password: passwordInput,
                     rememberMe: rememberMeInput 
                 })
             })
-            .then(response => {
+            .then(async response => {
                 if (response.ok) return response.json();
-                else throw new Error("Kullanıcı adı veya şifre hatalı!");
+                else {
+                    const errorMsg = await response.text();
+                    throw new Error(errorMsg || "Kullanıcı adı veya şifre hatalı!");
+                }
             })
             .then(data => {
                 const user = data.user;
@@ -74,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isAdmin = user.roles && user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
                 if (isAdmin) {
-                    throw new Error("Yöneticiler bu alanı kullanamaz. Lütfen Admin sekmesinden giriş yapın!");
+                    throw new Error("Yöneticiler bu alanı kullanamaz. Lütfen Yönetici Girişi sekmesini kullanın!");
                 }
                 
                 localStorage.setItem('user', JSON.stringify(user));
@@ -93,22 +173,23 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const usernameInput = document.getElementById('admin-username').value;
             const passwordInput = document.getElementById('admin-password').value;
-            // YENİ: Checkbox durumunu oku
             const rememberMeInput = document.getElementById('admin-remember').checked;
 
             fetch('http://localhost:8080/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // YENİ: rememberMe bilgisini body'ye ekle
                 body: JSON.stringify({ 
                     username: usernameInput, 
                     password: passwordInput,
                     rememberMe: rememberMeInput
                 })
             })
-            .then(response => {
+            .then(async response => {
                 if (response.ok) return response.json();
-                else throw new Error("Yönetici kodu veya şifre yanlış!");
+                else {
+                    const errorMsg = await response.text();
+                    throw new Error(errorMsg || "Yönetici kodu veya şifre yanlış!");
+                }
             })
             .then(data => {
                 const user = data.user;

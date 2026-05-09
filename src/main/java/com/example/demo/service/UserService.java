@@ -91,4 +91,54 @@ public class UserService {
             }
         });
     }
+
+    // --- YENİ EKLENDİ: ŞİFRE SIFIRLAMA İŞLEMLERİ ---
+
+    /**
+     * E-posta ile kullanıcı bulma (Şifre sıfırlama için kullanılır)
+     */
+    public User getUserByEmail(String email) {
+        if (email == null || email.isEmpty()) return null;
+        return userRepository.findAll().stream()
+                .filter(u -> email.equalsIgnoreCase(u.getEmail()))
+                .findFirst().orElse(null);
+    }
+
+    /**
+     * Kullanıcı için 30 dakika geçerli, 8 haneli rastgele bir sıfırlama kodu oluşturur.
+     */
+    public String generateResetToken(User user) {
+        String token = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        user.setResetToken(token);
+        user.setResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(30)); // 30 Dakika süre verdik
+        userRepository.save(user);
+        return token;
+    }
+
+    /**
+     * Sıfırlama kodunu doğrular ve yeni şifreyi şifreleyerek kaydeder.
+     */
+    public boolean resetPassword(String token, String newPassword) {
+        if (token == null || token.isEmpty() || newPassword == null || newPassword.isEmpty()) {
+            return false;
+        }
+
+        // Token ile eşleşen ve süresi henüz dolmamış kullanıcıyı bul
+        User user = userRepository.findAll().stream()
+                .filter(u -> token.equals(u.getResetToken()) && 
+                             u.getResetTokenExpiry() != null &&
+                             u.getResetTokenExpiry().isAfter(java.time.LocalDateTime.now()))
+                .findFirst().orElse(null);
+
+        if (user != null) {
+            // Yeni şifreyi hashle
+            user.setPassword(passwordEncoder.encode(newPassword));
+            // İşlem bitince token verilerini temizle ki bir daha kullanılamasın
+            user.setResetToken(null);
+            user.setResetTokenExpiry(null);
+            userRepository.save(user);
+            return true;
+        }
+        return false; // Token geçersiz veya süresi dolmuş
+    }
 }

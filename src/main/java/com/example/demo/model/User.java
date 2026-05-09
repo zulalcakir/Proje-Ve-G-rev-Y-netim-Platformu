@@ -1,6 +1,5 @@
 package com.example.demo.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -55,6 +54,14 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+    // --- YENİ EKLENDİ: ŞİFRE SIFIRLAMA İÇİN GEREKLİ ALANLAR ---
+    
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private java.time.LocalDateTime resetTokenExpiry;
+
     public User() {
     }
 
@@ -83,4 +90,11 @@ public class User {
 
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    // --- YENİ EKLENEN GETTER VE SETTERLAR ---
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public java.time.LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
+    public void setResetTokenExpiry(java.time.LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
 }

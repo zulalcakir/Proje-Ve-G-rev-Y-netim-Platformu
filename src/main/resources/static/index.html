@@ -23,7 +23,7 @@
                 
                 <div id="auth-message" style="display: none; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 0.85rem; font-weight: 600; text-align: center; border: 1px solid transparent;"></div>
                 
-                <div class="d-flex justify-content-center gap-2 mt-4">
+                <div class="d-flex justify-content-center gap-2 mt-4" id="form-buttons">
                     <button class="btn btn-sm btn-outline-light active" id="btn-user" onclick="switchForm('user')">Üye Girişi</button>
                     <button class="btn btn-sm btn-outline-light" id="btn-admin" onclick="switchForm('admin')">Yönetici Girişi</button>
                     <button class="btn btn-sm btn-outline-info" id="btn-register" onclick="switchForm('register')">Kayıt Ol</button>
@@ -34,8 +34,12 @@
                 <div class="mb-3">
                     <input type="text" class="cool-input" id="user-username" placeholder="Kullanıcı Adı (@username)" required>
                 </div>
-                <div class="mb-3">
+                <div class="mb-2">
                     <input type="password" class="cool-input" id="user-password" placeholder="Şifren (Sır gibi saklı)" required>
+                </div>
+                
+                <div class="text-end mb-3">
+                    <a href="#" onclick="showResetSection()" class="subtitle text-info" style="font-size: 0.75rem; text-decoration: none;">Şifremi Unuttum?</a>
                 </div>
                 
                 <div class="mb-4 form-check d-flex align-items-center gap-2">
@@ -83,6 +87,24 @@
                     <span>HESAP OLUŞTUR</span>
                 </button>
             </form>
+
+            <div id="resetSection" style="display: none;">
+                <h2 class="cool-title text-center mb-2" style="font-size: 1.5rem;">ŞİFREYİ YENİLE</h2>
+                <p class="subtitle text-center mb-4">Sistem yöneticisinden aldığınız kodu kullanın.</p>
+                
+                <div id="forgot-step-1">
+                    <input type="email" id="reset-email" class="cool-input mb-3" placeholder="Kayıtlı E-posta Adresiniz">
+                    <button onclick="requestResetCode()" class="cyber-btn mb-2">KOD GÖNDER</button>
+                </div>
+
+                <div id="forgot-step-2" style="display: none;">
+                    <input type="text" id="reset-token" class="cool-input mb-3" placeholder="Sıfırlama Kodu (Backend Konsoldan Bak)">
+                    <input type="password" id="reset-new-password" class="cool-input mb-3" placeholder="Yeni Güçlü Şifreniz">
+                    <button onclick="performPasswordReset()" class="cyber-btn" style="background: linear-gradient(45deg, #7928ca, #ff007f);">ŞİFREYİ GÜNCELLE</button>
+                </div>
+                
+                <button onclick="switchForm('user')" class="btn btn-link text-white-50 w-100 mt-3 small text-decoration-none">← Giriş Ekranına Dön</button>
+            </div>
 
         </div>
     </div>
