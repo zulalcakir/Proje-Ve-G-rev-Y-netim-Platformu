@@ -3,7 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.model.User;
 import com.example.demo.service.AuthService;
-import com.example.demo.security.JwtUtil; // JWT aracımızı dahil ettik
+import com.example.demo.security.JwtUtil; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,22 +20,22 @@ public class AuthController {
     private AuthService authService;
 
     @Autowired
-    private JwtUtil jwtUtil; // Token üretecek olan sınıfı enjekte ettik
+    private JwtUtil jwtUtil; 
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        // 1. Adım: Kullanıcının girdiği ad ve şifreyi veritabanında doğrula
+        // 1. Adım: Kullanıcı bilgilerini doğrula
         User user = authService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
         
-        // 2. Adım: Eğer kimlik bilgileri doğruysa (user null değilse)
         if (user != null) {
-            // Kullanıcının rolünü al (Eğer rol tanımlanmamışsa varsayılan olarak ROLE_USER ver)
+            // Kullanıcının rolünü al
             String role = user.getRoles().isEmpty() ? "ROLE_USER" : user.getRoles().iterator().next().getName();
             
-            // Kullanıcıya özel JWT Token üret
-            String token = jwtUtil.generateToken(user.getUsername(), role);
+            // KRİTİK GÜNCELLEME: LoginRequest içindeki 'rememberMe' bilgisini JwtUtil'e gönderiyoruz
+            // Bu sayede token süresi 1 gün veya 30 gün olarak belirlenecek.
+            String token = jwtUtil.generateToken(user.getUsername(), role, loginRequest.isRememberMe());
 
-            // Token ve kullanıcı bilgilerini bir paket (Map) haline getirip frontend'e gönder
+            // Yanıt paketini oluştur
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             response.put("user", user);
@@ -43,7 +43,7 @@ public class AuthController {
             return ResponseEntity.ok(response); 
         }
         
-        // 3. Adım: Bilgiler yanlışsa 401 hatası dön
+        // Bilgiler yanlışsa hata dön
         return ResponseEntity.status(401).body("Hata: Kullanıcı adı veya şifre yanlış.");
     }
 }

@@ -44,21 +44,28 @@ function switchForm(formType) {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 3. ÜYE GİRİŞİ (JWT TOKEN EKLENDİ) ---
+    // --- 3. ÜYE GİRİŞİ (BENİ HATIRLA EKLENDİ) ---
     const userForm = document.getElementById('userForm');
     if(userForm) {
         userForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const usernameInput = document.getElementById('user-username').value;
             const passwordInput = document.getElementById('user-password').value;
+            // YENİ: Checkbox durumunu oku
+            const rememberMeInput = document.getElementById('user-remember').checked;
 
             fetch('http://localhost:8080/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                // YENİ: rememberMe bilgisini body'ye ekle
+                body: JSON.stringify({ 
+                    username: usernameInput, 
+                    password: passwordInput,
+                    rememberMe: rememberMeInput 
+                })
             })
             .then(response => {
-                if (response.ok) return response.json(); // Artık bir Map (token ve user) dönüyor
+                if (response.ok) return response.json();
                 else throw new Error("Kullanıcı adı veya şifre hatalı!");
             })
             .then(data => {
@@ -70,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error("Yöneticiler bu alanı kullanamaz. Lütfen Admin sekmesinden giriş yapın!");
                 }
                 
-                // KRİTİK: Hem kullanıcıyı hem de Token'ı hafızaya alıyoruz
                 localStorage.setItem('user', JSON.stringify(user));
                 localStorage.setItem('jwtToken', token);
                 
@@ -80,18 +86,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 4. ADMIN GİRİŞİ (JWT TOKEN EKLENDİ) ---
+    // --- 4. ADMIN GİRİŞİ (BENİ HATIRLA EKLENDİ) ---
     const adminForm = document.getElementById('adminForm');
     if(adminForm) {
         adminForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const usernameInput = document.getElementById('admin-username').value;
             const passwordInput = document.getElementById('admin-password').value;
+            // YENİ: Checkbox durumunu oku
+            const rememberMeInput = document.getElementById('admin-remember').checked;
 
             fetch('http://localhost:8080/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                // YENİ: rememberMe bilgisini body'ye ekle
+                body: JSON.stringify({ 
+                    username: usernameInput, 
+                    password: passwordInput,
+                    rememberMe: rememberMeInput
+                })
             })
             .then(response => {
                 if (response.ok) return response.json();
@@ -103,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isAdmin = user.roles && user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
                 if (isAdmin) {
-                    // KRİTİK: Admin bilgisini ve Token'ı hafızaya alıyoruz
                     localStorage.setItem('user', JSON.stringify(user));
                     localStorage.setItem('jwtToken', token);
                     window.location.href = 'admin.html';
@@ -115,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 5. KAYIT OLMA (fullName EKLENDİ) ---
+    // --- 5. KAYIT OLMA ---
     const registerForm = document.getElementById('registerForm');
     if(registerForm) {
         registerForm.addEventListener('submit', function(e) {
