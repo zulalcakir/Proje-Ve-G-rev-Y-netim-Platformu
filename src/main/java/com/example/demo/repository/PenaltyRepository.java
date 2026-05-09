@@ -10,10 +10,17 @@ import java.util.List;
 @Repository
 public interface PenaltyRepository extends JpaRepository<Penalty, Long> {
 
-    // Kullanıcı ID'sine göre tüm cezaları listele
+    // Kullanıcı ID'sine göre tüm ceza kayıtlarını getirir
     List<Penalty> findByUserId(Long userId);
 
-    // Kullanıcının toplam ceza puanını hesapla
+    /**
+     * Scheduler için gerekli: 
+     * Görev ID'sine göre ceza kaydını getirir.
+     * Eğer bu görev için daha önce ceza oluşturulmuşsa onu bulup güncelleriz.
+     */
+    List<Penalty> findByTaskId(Long taskId);
+
+    // Dakika bazlı hesaplanan tüm puanları toplar
     @Query("SELECT SUM(p.penaltyScore) FROM Penalty p WHERE p.user.id = :userId")
     Integer findTotalPenaltyByUserId(@Param("userId") Long userId);
 }

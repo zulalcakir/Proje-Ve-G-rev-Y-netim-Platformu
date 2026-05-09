@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('jwtToken');
     
-    // Güvenlik Kontrolü: Token yoksa login'e gönder
+    // Güvenlik Kontrolü
     if (!storedUser || !token || token === "null") {
         localStorage.clear();
         window.location.href = 'index.html';
@@ -28,9 +28,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Merkezi Veri Yükleme Yöneticisi
 async function verileriYukle(userId, token) {
-    await istatistikleriGuncelle(userId, token);
-    await gorevListesiniYukle(userId, token);
-    await sonLoglariYukle(userId, token);
+    // Tüm yüklemeleri paralel başlatarak hızı artıralım
+    await Promise.all([
+        istatistikleriGuncelle(userId, token),
+        gorevListesiniYukle(userId, token),
+        sonLoglariYukle(userId, token),
+        cezalariYukle(userId, token)
+    ]);
 }
 
 // Arayüzdeki isim ve profil kısımlarını doldurur
@@ -63,47 +67,83 @@ function handleResponse(res) {
     return res.status !== 204 ? res.json() : null;
 }
 
-// 1. İstatistikleri Güncelle (Hem Görev Hem Yöneticilik Sayar)
+// 1. İstatistikleri Güncelle
 async function istatistikleriGuncelle(userId, token) {
     try {
         const headers = { 'Authorization': 'Bearer ' + token };
+        const [resProj, resTask] = await Promise.all([
+            fetch(`http://localhost:8080/api/projects/managed-by/${userId}`, { headers }),
+            fetch(`http://localhost:8080/api/tasks/user/${userId}`, { headers })
+        ]);
 
-        // A. Kullanıcının yönettiği projeleri çek
-        const resProj = await fetch(`http://localhost:8080/api/projects/managed-by/${userId}`, { headers });
         const yonettigimProjeler = await handleResponse(resProj);
-
-        // B. Kullanıcıya atanmış görevleri çek
-        const resTask = await fetch(`http://localhost:8080/api/tasks/user/${userId}`, { headers });
         const banaAtananGorevler = await handleResponse(resTask);
 
-        // --- BENZERSİZ PROJE HAVUZU ---
         const projeIDleri = new Set();
-        
-        // Yönetilenleri ekle
         if (yonettigimProjeler) yonettigimProjeler.forEach(p => projeIDleri.add(p.id));
-        
-        // Görev alınanları ekle
         if (banaAtananGorevler) {
             banaAtananGorevler.forEach(g => {
                 if (g.project) projeIDleri.add(g.project.id);
             });
         }
 
-        // C. ARAYÜZE YANSIT
         document.getElementById('proje-sayisi').innerText = projeIDleri.size;
-        
         const bekleyenler = banaAtananGorevler ? banaAtananGorevler.filter(g => g.status !== 'TAMAMLANDI').length : 0;
         const tamamlananlar = banaAtananGorevler ? banaAtananGorevler.filter(g => g.status === 'TAMAMLANDI').length : 0;
         
         document.getElementById('gorev-sayisi').innerText = bekleyenler;
         document.getElementById('tamamlanan-sayisi').innerText = tamamlananlar;
-
     } catch (err) {
         console.error("İstatistik hatası:", err);
     }
 }
 
-// 2. Tabloya Görevleri Yükle (Bana Atanan Görevler)
+// 2. Ceza Verilerini Yükle - DEBUG MODU EKLENDİ
+async function cezalariYukle(userId, token) {
+    const penaltyList = document.getElementById('penaltyList');
+    const totalScoreElement = document.getElementById('totalPenaltyScore');
+    if (!penaltyList || !totalScoreElement) return;
+
+    try {
+        const headers = { 'Authorization': 'Bearer ' + token };
+
+        // A. Toplam Puanı Çek
+        const resTotal = await fetch(`http://localhost:8080/api/penalties/user/${userId}/total`, { headers });
+        const totalScore = await handleResponse(resTotal);
+        totalScoreElement.innerText = (totalScore !== null && totalScore !== undefined) ? totalScore : 0;
+
+        // B. Ceza Listesini Çek
+        const resList = await fetch(`http://localhost:8080/api/penalties/user/${userId}`, { headers });
+        const penalties = await handleResponse(resList);
+
+        console.log("Backend'den gelen cezalar:", penalties); // DEBUG: Gelen veriyi konsolda kontrol et
+
+        penaltyList.innerHTML = '';
+
+        if (!penalties || penalties.length === 0) {
+            penaltyList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted small">Henüz ceza kaydınız bulunmuyor.</td></tr>';
+            return;
+        }
+
+        penalties.reverse().forEach(p => {
+            const date = p.penaltyDate ? new Date(p.penaltyDate).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '---';
+            const taskTitle = p.task ? p.task.title : 'Genel Sistem';
+
+            penaltyList.innerHTML += `
+                <tr class="task-row" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td class="py-3 fw-bold text-white">${taskTitle}</td>
+                    <td class="text-white-50">${p.reason || 'Sebep belirtilmedi'}</td>
+                    <td><span class="badge bg-danger bg-opacity-25 text-danger">-${p.penaltyScore} Puan</span></td>
+                    <td class="small text-white-50">${date}</td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Ceza listesi yüklenemedi:", err);
+    }
+}
+
+// 3. Tabloya Görevleri Yükle
 async function gorevListesiniYukle(userId, token) {
     const taskList = document.getElementById('task-list');
     const noTaskMsg = document.getElementById('no-task-message');
@@ -116,12 +156,10 @@ async function gorevListesiniYukle(userId, token) {
         const gorevler = await handleResponse(res);
 
         taskList.innerHTML = '';
-
         if (!gorevler || gorevler.length === 0) {
             if (noTaskMsg) noTaskMsg.classList.remove('d-none');
             return;
         }
-
         if (noTaskMsg) noTaskMsg.classList.add('d-none');
 
         gorevler.reverse().forEach(task => {
@@ -179,7 +217,7 @@ function getStatusBadge(status) {
     }
 }
 
-// 3. Son İşlem Loglarını Yükle
+// 4. Son İşlem Loglarını Yükle
 async function sonLoglariYukle(userId, token) {
     const logBox = document.getElementById('recent-logs');
     if (!logBox) return;

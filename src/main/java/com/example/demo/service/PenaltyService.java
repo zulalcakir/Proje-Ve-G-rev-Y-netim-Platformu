@@ -14,10 +14,12 @@ public class PenaltyService {
         this.penaltyRepository = penaltyRepository;
     }
 
+    // Kullanıcının dakika bazlı ceza geçmişini liste olarak döner
     public List<Penalty> getPenaltiesByUserId(Long userId) {
         return penaltyRepository.findByUserId(userId);
     }
 
+    // Veritabanındaki tüm dakika bazlı puanları toplar, sonuç null ise 0 döner
     public Integer getTotalPenaltyScore(Long userId) {
         Integer total = penaltyRepository.findTotalPenaltyByUserId(userId);
         return (total != null) ? total : 0;

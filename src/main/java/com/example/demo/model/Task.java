@@ -75,6 +75,15 @@ public class Task {
 
     public Task() {}
 
+    // --- CEZA SİSTEMİ (SCHEDULER) İÇİN KÖPRÜ METODU ---
+    /**
+     * Scheduler sınıfı 'getAssignedToUser()' metodunu aradığı için 
+     * mevcut 'assignedTo' alanına bu köprü metodu ekledik.
+     */
+    public User getAssignedToUser() {
+        return this.assignedTo;
+    }
+
     // --- GETTER VE SETTERLAR ---
 
     public Long getId() { return id; }

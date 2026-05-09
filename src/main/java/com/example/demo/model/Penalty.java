@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "penalties")
-@Data // Getter, Setter ve ToString'i otomatik halleder
+@Data // Getter, Setter, Equals ve ToString'i otomatik halleder
 public class Penalty {
 
     @Id
@@ -15,6 +15,13 @@ public class Penalty {
 
     @Column(name = "penalty_score")
     private int penaltyScore;
+
+    /**
+     * Veritabanındaki 'penalty_amount' kolonu ile eşleşmesi için eklendi.
+     * Scheduler sınıfı bu alanı set etmek isteyecektir.
+     */
+    @Column(name = "penalty_amount")
+    private int penaltyAmount;
 
     @Column(name = "penalty_date")
     private LocalDateTime penaltyDate;
@@ -26,7 +33,10 @@ public class Penalty {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // Cezaya sebep olan görevi bağladık
+    /**
+     * Cezaya sebep olan görevi bağladık.
+     * JoinColumn isminin veritabanındaki 'task_id' ile birebir uyması için netleştirdik.
+     */
     @ManyToOne
     @JoinColumn(name = "task_id")
     private Task task;
