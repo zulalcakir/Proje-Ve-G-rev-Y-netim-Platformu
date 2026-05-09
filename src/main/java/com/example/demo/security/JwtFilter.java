@@ -26,43 +26,54 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Gelen isteğin başlığında (Header) 'Authorization' var mı bak
+        // 1. Authorization Başlığını Al
         final String authorizationHeader = request.getHeader("Authorization");
 
         String username = null;
         String jwt = null;
-        String role = null; // YENİ: Rolü tutacağımız değişken
+        String role = null;
 
-        // 2. Token varsa ve 'Bearer ' ile başlıyorsa içinden token'ı, kullanıcı adını ve rolünü al
+        // 2. Token Yapısını Kontrol Et
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
-                role = jwtUtil.extractRole(jwt); // YENİ: Token içinden rolü alıyoruz
+                role = jwtUtil.extractRole(jwt); // Token içinden rolü al
             } catch (Exception e) {
-                System.out.println("Geçersiz veya süresi dolmuş Token!");
+                // Konsola hata basmak, neden 401 aldığını anlamanı sağlar
+                System.out.println("JWT Ayıklama Hatası: " + e.getMessage());
             }
         }
 
-        // 3. Kullanıcı adı bulunduysa ve sistemde henüz oturum açılmamışsa
+        // 3. Doğrulama ve Güvenlik Bağlamına Ekleme
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             
-            // Token'ın bizim sistemimize ait olup olmadığını ve süresini doğrula
             if (jwtUtil.validateToken(jwt, username)) {
                 
-                // YENİ: Spring Security'ye kullanıcının rolünü tanıtıyoruz
-                List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
-                
-                // Her şey yolundaysa Spring Security'ye "Bu adam güvenilir, yetkileriyle içeri al" diyoruz
+                // KRİTİK DÜZELTME: Rolün başında ROLE_ var mı kontrol et
+                // Eğer veritabanında/token'da sadece "ADMIN" yazıyorsa, Spring bunu "ROLE_ADMIN" olarak ister.
+                if (role != null && !role.startsWith("ROLE_")) {
+                    role = "ROLE_" + role;
+                }
+
+                // Rol null ise boş bir liste atayarak hata almayı engelle
+                List<SimpleGrantedAuthority> authorities = (role != null) 
+                    ? Collections.singletonList(new SimpleGrantedAuthority(role)) 
+                    : Collections.emptyList();
+
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        username, null, authorities); // Yetkiler (role) eklendi
+                        username, null, authorities);
                 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                
+                // Spring Security'ye kullanıcının artık onaylandığını bildir
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                
+                System.out.println("Kullanıcı başarıyla doğrulandı: " + username + " | Rol: " + role);
             }
         }
         
-        // 4. İsteği sonraki aşamalara aktar
+        // 4. Filtre zincirine devam et
         filterChain.doFilter(request, response);
     }
 }

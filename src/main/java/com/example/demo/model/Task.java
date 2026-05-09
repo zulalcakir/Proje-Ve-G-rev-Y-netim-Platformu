@@ -1,52 +1,77 @@
 package com.example.demo.model;
 
-import java.time.LocalDateTime;
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tasks")
+/**
+ * Hibernate'in teknik "Proxy" nesnelerinin (Lazy alanların) JSON'a 
+ * dönüştürülürken "no Session" hatası vermesini bu notasyon engeller.
+ */
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) 
 public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // String yerine Enum kullanarak hata payını sıfırlıyoruz
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private TaskStatus status = TaskStatus.BEKLEMEDE; 
 
-    // Görevin son teslim tarihi (Saat ve dakika dahil)
+    /**
+     * Frontend'deki <input type="datetime-local"> (yyyy-MM-ddTHH:mm) 
+     * formatıyla birebir konuşabilmesi için kritik notasyon.
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime dueDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(name = "created_at", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    /**
+     * FetchType.EAGER: Dashboard listelenirken ilişkili verilerin 
+     * eksiksiz gelmesini sağlar ve "no Session" hatasını önler.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "assigned_to_user_id")
     private User assignedTo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "priority_id")
     private Priority priority;
 
-    @ManyToMany
+    /**
+     * KRİTİK DÜZELTME: 'tags' koleksiyonunu LAZY yerine EAGER yapıyoruz.
+     * Ayrıca null hatası almamak için yeni bir HashSet ile başlatıyoruz.
+     */
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "task_tags",
         joinColumns = @JoinColumn(name = "task_id"),
         inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private Set<Tag> tags;
+    private Set<Tag> tags = new HashSet<>();
 
     public Task() {}
 
@@ -61,12 +86,14 @@ public class Task {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    // TaskStatus tipinde getter/setter
     public TaskStatus getStatus() { return status; }
     public void setStatus(TaskStatus status) { this.status = status; }
 
     public LocalDateTime getDueDate() { return dueDate; }
     public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }

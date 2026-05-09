@@ -1,11 +1,19 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
+/**
+ * KRİTİK: Hibernate'in nesneleri takip etmek için kullandığı teknik alanların 
+ * JSON'a dönüştürülürken "no Session" hatası vermesini bu satır engeller.
+ */
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) 
 public class User {
 
     @Id
@@ -15,21 +23,27 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    /**
+     * GÜVENLİK: Şifrenin veritabanına yazılmasına izin verir (WRITE_ONLY) 
+     * ancak JSON olarak frontend'e gönderilmesini engeller.
+     */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 
     @Column(unique = true)
     private String email;
 
-    // Arayüzdeki "Ad Soyad" bilgisini tutar
     private String fullName;
 
-    // HATAYI ÇÖZEN KRİTİK ALAN: 
-    // MySQL 'active' alanı için bir değer bekliyordu, buraya ekledik ve varsayılanı 'true' yaptık.
     @Column(nullable = false)
     private boolean active = true;
 
-    @ManyToOne
+    /**
+     * Dashboard'da departman isminin görünmemesi veya hata vermesi riskine karşı
+     * EAGER yükleme yaparak departman bilgisini paket halinde çekiyoruz.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     private Department department;
 

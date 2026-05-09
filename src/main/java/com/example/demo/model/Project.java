@@ -1,10 +1,14 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "projects")
+// Hibernate'in teknik detaylarının (hayalet nesnelerin) JSON hatası vermesini engeller
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) 
 public class Project {
 
     @Id
@@ -18,18 +22,22 @@ public class Project {
     private String description;
 
     @Column(name = "created_at", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") // JSON çıkış formatını sabitler
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "end_date")
-    private LocalDateTime endDate; // Projenin hedeflenen bitiş tarihi
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm") // Frontend'deki datetime-local ile tam uyum
+    private LocalDateTime endDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // KRİTİK GÜNCELLEME: LAZY yerine EAGER yaparak "no Session" hatasını çözüyoruz
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by_user_id", nullable = false)
-    private User createdBy; // Projeyi sisteme ekleyen Admin
+    private User createdBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // KRİTİK GÜNCELLEME: LAZY yerine EAGER yaparak tablo dolmama sorununu çözüyoruz
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manager_id")
-    private User manager; // Projeden sorumlu olan kişi (Yönetici)
+    private User manager;
 
     public Project() {}
 

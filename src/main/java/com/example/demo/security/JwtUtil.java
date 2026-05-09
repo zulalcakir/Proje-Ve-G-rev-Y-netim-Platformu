@@ -3,66 +3,101 @@ package com.example.demo.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Component
 public class JwtUtil {
     
-    // Güvenlik Anahtarı
-    private final String SECRET = "ProjeVeGorevYonetimiPlatformuIcinCokGizliBirAnahtar12345!";
+    // GÜVENLİK NOTU: Gerçek projelerde bu anahtarı application.properties içinden almalısın.
+    // En az 256-bit uzunluğunda olması (32 karakter+) HS256 algoritması için şarttır.
+    private final String SECRET = "ProjeVeGorevYonetimiPlatformuIcinCokGizliBirAnahtar1234567890!";
     
-    // --- OTURUM SÜRELERİ ---
-    private final long DEFAULT_EXPIRATION = 86400000; // 1 Gün (milisaniye)
-    private final long REMEMBER_ME_EXPIRATION = 2592000000L; // 30 Gün (milisaniye)
+    private final long DEFAULT_EXPIRATION = 86400000; // 1 Gün
+    private final long REMEMBER_ME_EXPIRATION = 2592000000L; // 30 Gün
 
+    /**
+     * Anahtarı güvenli bir şekilde Base64 formatına uygun baytlara çevirir.
+     */
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes());
+        byte[] keyBytes = SECRET.getBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     /**
-     * Kullanıcı için Token üretir. 
-     * rememberMe true ise 30 günlük, false ise 1 günlük token oluşturur.
+     * Kullanıcı adı ve rol bilgisini içeren JWT Token üretir.
      */
     public String generateToken(String username, String role, boolean rememberMe) {
-        // Seçime göre süreyi belirle
         long expirationTime = rememberMe ? REMEMBER_ME_EXPIRATION : DEFAULT_EXPIRATION;
+        
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role); // "ROLE_ADMIN" veya "ROLE_USER" formatında olmalı
 
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(username)
-                .claim("role", role)
-                .setIssuedAt(new Date())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Token'ın içinden kullanıcı adını okur
+    /**
+     * Token içinden kullanıcı adını (Subject) okur.
+     */
     public String extractUsername(String token) {
-        return extractClaims(token).getSubject();
+        return extractClaim(token, Claims::getSubject);
     }
 
-    // Token içinden rol bilgisini okur
+    /**
+     * Token içinden rol ("role") bilgisini okur.
+     */
     public String extractRole(String token) {
-        return extractClaims(token).get("role", String.class);
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    // Token'ın süresi dolmuş mu diye kontrol eder
+    /**
+     * Token'dan herhangi bir bilgiyi (Claim) güvenli bir şekilde çekmek için yardımcı metot.
+     */
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    /**
+     * Token'ın süresinin dolup dolmadığını kontrol eder.
+     */
     public boolean isTokenExpired(String token) {
-        return extractClaims(token).getExpiration().before(new Date());
+        return extractExpiration(token).before(new Date());
     }
 
-    // Token'ın tamamen geçerli olup olmadığını doğrular
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    /**
+     * Token'ın hem süresini hem de kullanıcı adını doğrular.
+     */
     public boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        try {
+            final String extractedUsername = extractUsername(token);
+            return (extractedUsername.equals(username) && !isTokenExpired(token));
+        } catch (Exception e) {
+            return false; // Token bozuksa veya geçersizse direkt false dön
+        }
     }
 
-    // Yardımcı Metot: Token'ı çözer
-    private Claims extractClaims(String token) {
+    /**
+     * Token'ı parçalara ayıran ve içeriğini (Claims) okuyan ana metot.
+     */
+    private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()

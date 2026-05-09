@@ -11,19 +11,28 @@ import com.example.demo.service.ProjectService;
 
 @RestController
 @RequestMapping("/api/projects")
-@CrossOrigin(origins = "*") // Frontend erişimi için
+@CrossOrigin(origins = "*")
 public class ProjectController {
 
     @Autowired
     private ProjectService projectService;
 
-    // 1. Tüm projeleri listele
+    // 1. Tüm projeleri listele (Admin Paneli için)
     @GetMapping
     public List<Project> getAllProjects() {
         return projectService.getAllProjects();
     }
 
-    // 2. ID ile belirli bir projeyi getir
+    /**
+     * 2. KRİTİK GÜNCELLEME: Belirli bir yöneticinin (Manager) sorumlu olduğu projeleri getirir.
+     * Dashboard'da "Aktif Projeler" sayısının doğru görünmesini sağlar.
+     */
+    @GetMapping("/managed-by/{userId}")
+    public List<Project> getManagedProjects(@PathVariable Long userId) {
+        return projectService.getProjectsByManager(userId);
+    }
+
+    // 3. ID ile belirli bir projeyi getir
     @GetMapping("/{id}")
     public ResponseEntity<Project> getProjectById(@PathVariable Long id) {
         Project project = projectService.getProjectById(id);
@@ -33,7 +42,7 @@ public class ProjectController {
         return ResponseEntity.notFound().build();
     }
 
-    // 3. Yeni Proje Oluştur (Sadece ADMIN yapabilir)
+    // 4. Yeni Proje Oluştur (Sadece ADMIN)
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
@@ -45,7 +54,7 @@ public class ProjectController {
         }
     }
 
-    // 4. Projeyi Güncelle (Sadece ADMIN yapabilir)
+    // 5. Projeyi Güncelle (Sadece ADMIN)
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Project> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
@@ -63,7 +72,7 @@ public class ProjectController {
         return ResponseEntity.ok(updatedProject);
     }
 
-    // 5. Proje Sil (Sadece ADMIN yapabilir)
+    // 6. Proje Sil (Sadece ADMIN)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {

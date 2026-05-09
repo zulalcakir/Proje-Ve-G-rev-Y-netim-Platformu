@@ -9,10 +9,12 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
+        /* Dashboard'a özel görsel iyileştirmeler */
         .stat-box {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
         .stat-box:hover {
             background: rgba(255, 255, 255, 0.07);
@@ -25,6 +27,8 @@
             margin-bottom: 5px;
             color: rgba(255,255,255,0.7) !important;
             transition: 0.3s;
+            display: flex;
+            align-items: center;
         }
         .cyber-menu-item:hover, .cyber-menu-item.active {
             background: rgba(255, 255, 255, 0.1);
@@ -36,21 +40,19 @@
             text-transform: uppercase;
             border-left: 4px solid #ff007f;
             padding-left: 15px;
+            font-weight: 700;
         }
         .activity-item {
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 10px 0;
+            padding: 12px 0;
             font-size: 0.85rem;
         }
         .task-row:hover {
             background: rgba(255, 255, 255, 0.03);
         }
-        .badge-status {
-            font-size: 0.7rem;
-            padding: 5px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-        }
+        /* Dashboard Scrollbar'ı Gizle */
+        .main-content-scroll::-webkit-scrollbar { display: none; }
+        .main-content-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
         <div class="row h-100 g-4">
             
             <div class="col-lg-3 h-100">
-                <div class="glass-card h-100 d-flex flex-column p-4">
+                <div class="glass-card h-100 d-flex flex-column p-4 shadow-lg">
                     <div class="brand-area mb-5">
                         <h3 class="cool-title" style="font-size: 1.8rem;">P-PLATFORM</h3>
                         <p class="subtitle" style="font-size: 0.75rem; letter-spacing: 2px;">MANAGEMENT SUITE</p>
@@ -72,71 +74,81 @@
                     <nav class="flex-grow-1">
                         <ul class="nav flex-column gap-2">
                             <li class="nav-item">
-                                <a class="nav-link cyber-menu-item active" href="dashboard.html"><i class="fas fa-home me-2"></i> Ana Panel</a>
+                                <a class="nav-link cyber-menu-item active" href="dashboard.html">
+                                    <i class="fas fa-home me-2"></i> Ana Panel
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link cyber-menu-item" href="#"><i class="fas fa-project-diagram me-2"></i> Projelerim</a>
+                                <a class="nav-link cyber-menu-item" href="#">
+                                    <i class="fas fa-project-diagram me-2"></i> Projelerim
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link cyber-menu-item" href="#"><i class="fas fa-check-double me-2"></i> Görevler</a>
+                                <a class="nav-link cyber-menu-item" href="#">
+                                    <i class="fas fa-check-double me-2"></i> Görevlerim
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link cyber-menu-item" href="#"><i class="fas fa-bell me-2"></i> Bildirimler</a>
+                                <a class="nav-link cyber-menu-item" href="#">
+                                    <i class="fas fa-bell me-2"></i> Bildirimler
+                                </a>
                             </li>
                         </ul>
                     </nav>
 
                     <div class="profile-section mt-auto pt-4 border-top border-white border-opacity-10">
                         <div class="d-flex align-items-center mb-3">
-                            <div id="user-avatar" class="avatar-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold" 
-                                 style="width: 45px; height: 45px; background: linear-gradient(45deg, #ff007f, #7928ca); border-radius: 50%; font-size: 1.2rem;">
+                            <div id="user-avatar" class="avatar-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" 
+                                 style="width: 48px; height: 48px; background: linear-gradient(45deg, #ff007f, #7928ca); border-radius: 50%; font-size: 1.3rem; border: 2px solid rgba(255,255,255,0.1);">
                                 ?
                             </div>
                             <div>
-                                <p id="user-full-name" class="m-0 fw-bold text-white" style="font-size: 0.9rem;">Yükleniyor...</p>
-                                <p id="user-role-label" class="m-0 text-muted" style="font-size: 0.75rem;">Üye</p>
+                                <p id="user-full-name" class="m-0 fw-bold text-white" style="font-size: 0.95rem;">Yükleniyor...</p>
+                                <p id="user-role-label" class="m-0 text-white-50" style="font-size: 0.75rem;">Üye</p>
                             </div>
                         </div>
-                        <button class="cyber-btn w-100" style="padding: 10px; font-size: 0.85rem;" onclick="logout()">
-                            <span><i class="fas fa-sign-out-alt"></i> GÜVENLİ ÇIKIŞ</span>
+                        <button class="cyber-btn w-100" style="padding: 12px; font-size: 0.85rem;" onclick="logout()">
+                            <span><i class="fas fa-sign-out-alt me-2"></i> GÜVENLİ ÇIKIŞ</span>
                         </button>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-9 h-100">
-                <div class="glass-card h-100 p-4" style="overflow-y: auto; scrollbar-width: none;">
+                <div class="glass-card h-100 p-4 main-content-scroll" style="overflow-y: auto;">
                     
                     <div class="header-section mb-5">
-                        <h2 class="text-white fw-900" style="font-size: 2.2rem;">Merhaba, <span id="welcome-name" style="color: #00d2ff;">...</span>! 👋</h2>
-                        <p class="subtitle">İşte projelerindeki son durum ve bekleyen işlerin.</p>
+                        <h2 class="text-white fw-900" style="font-size: 2.2rem;">
+                            Merhaba, <span id="welcome-name" style="color: #00d2ff;">...</span>! 👋
+                        </h2>
+                        <p class="subtitle opacity-75">İşte projelerindeki son durum ve bekleyen işlerin.</p>
                     </div>
                     
                     <div class="row g-4 mb-5">
                         <div class="col-md-4">
-                            <div class="stat-box p-4 rounded-4">
-                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem;">Aktif Projeler</p>
+                            <div class="stat-box p-4 rounded-4 shadow-sm">
+                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem; font-weight: 700;">Aktif Projeler</p>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <h3 id="proje-sayisi" class="cool-title m-0" style="font-size: 2.8rem;">0</h3>
-                                    <span style="font-size: 1.8rem; opacity: 0.5;"><i class="fas fa-rocket text-info"></i></span>
+                                    <span style="font-size: 2rem; opacity: 0.4;"><i class="fas fa-rocket text-info"></i></span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="stat-box p-4 rounded-4">
-                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem;">Bekleyen Görevler</p>
+                            <div class="stat-box p-4 rounded-4 shadow-sm">
+                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem; font-weight: 700;">Bekleyen Görevler</p>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <h3 id="gorev-sayisi" class="cool-title m-0" style="font-size: 2.8rem;">0</h3>
-                                    <span style="font-size: 1.8rem; opacity: 0.5;"><i class="fas fa-clock text-warning"></i></span>
+                                    <span style="font-size: 2rem; opacity: 0.4;"><i class="fas fa-clock text-warning"></i></span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="stat-box p-4 rounded-4">
-                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem;">Tamamlanan</p>
+                            <div class="stat-box p-4 rounded-4 shadow-sm">
+                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem; font-weight: 700;">Tamamlanan</p>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <h3 id="tamamlanan-sayisi" class="cool-title m-0" style="font-size: 2.8rem;">0</h3>
-                                    <span style="font-size: 1.8rem; opacity: 0.5;"><i class="fas fa-trophy text-success"></i></span>
+                                    <span style="font-size: 2rem; opacity: 0.4;"><i class="fas fa-trophy text-success"></i></span>
                                 </div>
                             </div>
                         </div>
@@ -144,17 +156,17 @@
 
                     <div class="row g-4">
                         <div class="col-xl-8">
-                            <h4 class="text-white mb-4 fw-bold section-title">Bana Atanan Görevler</h4>
-                            <div class="stat-box p-4 rounded-4" style="min-height: 400px;">
+                            <h4 class="text-white mb-4 section-title">Bana Atanan Görevler</h4>
+                            <div class="stat-box p-4 rounded-4 shadow-sm" style="min-height: 450px;">
                                 <div class="table-responsive">
                                     <table class="table table-dark table-borderless align-middle m-0">
                                         <thead>
-                                            <tr class="text-muted" style="font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                <th>GÖREV DETAYI</th>
-                                                <th>PROJE</th>
-                                                <th>TESLİM</th>
-                                                <th>DURUM</th>
-                                                <th class="text-center">EYLEM</th>
+                                            <tr class="text-white-50" style="font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                <th class="pb-3">GÖREV DETAYI</th>
+                                                <th class="pb-3">PROJE</th>
+                                                <th class="pb-3">TESLİM</th>
+                                                <th class="pb-3">DURUM</th>
+                                                <th class="pb-3 text-center">EYLEM</th>
                                             </tr>
                                         </thead>
                                         <tbody id="task-list" style="font-size: 0.85rem;">
@@ -162,16 +174,17 @@
                                     </table>
                                 </div>
                                 <div id="no-task-message" class="text-center mt-5 d-none">
-                                    <p class="text-muted">Harika! Üzerinde bekleyen bir görev görünmüyor. ☕</p>
+                                    <i class="fas fa-mug-hot fa-3x text-muted mb-3 opacity-25"></i>
+                                    <p class="text-muted">Harika! Üzerinde bekleyen bir görev görünmüyor.</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-xl-4">
-                            <h4 class="text-white mb-4 fw-bold section-title">Sistem Hareketleri</h4>
-                            <div class="stat-box p-4 rounded-4" style="min-height: 400px; max-height: 400px; overflow-y: auto;">
+                            <h4 class="text-white mb-4 section-title">Sistem Hareketleri</h4>
+                            <div class="stat-box p-4 rounded-4 shadow-sm" style="min-height: 450px; max-height: 450px; overflow-y: auto;">
                                 <div id="recent-logs">
-                                    <p class="text-muted text-center mt-5">İşlemler taranıyor...</p>
+                                    <p class="text-muted text-center mt-5 small">İşlemler taranıyor...</p>
                                 </div>
                             </div>
                         </div>
@@ -184,11 +197,5 @@
     </div>
 
     <script src="dashboard.js"></script>
-    <script>
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
-    </script>
 </body>
 </html>
