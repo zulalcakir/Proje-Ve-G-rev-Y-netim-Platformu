@@ -3,7 +3,7 @@ package com.example.demo.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize; // EKLENDİ: Yetkilendirme kontrolü için
+import org.springframework.security.access.prepost.PreAuthorize; 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,14 +35,16 @@ public class UserController {
         return userService.getUserById(id); 
     }
 
-    // KİLİT 1: SADECE ADMINLER KULLANICI EKLEYEBİLİR VEYA GÜNCELLEYEBİLİR
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    // DÜZELTME: Kayıt sayfasından gelen dış kullanıcıların üye olabilmesi için
+    // buradaki @PreAuthorize("hasAuthority('ROLE_ADMIN')") kilidini kaldırdık.
+    // Artık herkes istek atıp kayıt olabilir.
     @PostMapping 
     public User save(@RequestBody User user) { 
         return userService.saveUser(user); 
     }
     
     // KİLİT 2: SADECE ADMINLER KULLANICI SİLEBİLİR
+    // Güvenlik gereği silme yetkisi sadece yöneticilerde kalmalı.
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}") 
     public void delete(@PathVariable Long id) { 

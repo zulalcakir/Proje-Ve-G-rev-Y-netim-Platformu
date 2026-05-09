@@ -5,6 +5,7 @@ import com.example.demo.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.HtmlUtils; // YENİ EKLENDİ: XSS Koruması için
 
 import java.util.List;
 
@@ -46,6 +47,16 @@ public class ProjectService {
      */
     @Transactional
     public Project saveProject(Project project) {
+        // 1. ADIM: XSS KORUMASI
+        // Kullanıcının girdiği proje adı ve açıklamasını HTML özel karakterlerinden arındırıyoruz.
+        // Böylece zararlı kodlar çalıştırılamaz, sadece güvenli metin olarak kalır.
+        if (project.getName() != null) {
+            project.setName(HtmlUtils.htmlEscape(project.getName()));
+        }
+        if (project.getDescription() != null) {
+            project.setDescription(HtmlUtils.htmlEscape(project.getDescription()));
+        }
+
         boolean isNew = (project.getId() == null);
         Project savedProject = projectRepository.save(project);
 
