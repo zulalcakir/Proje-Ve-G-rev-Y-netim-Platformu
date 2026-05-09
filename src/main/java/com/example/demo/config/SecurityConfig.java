@@ -47,8 +47,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Kayıt olma
                 
-                // Statik dosyalar ve sayfalar (Frontend erişimi)
-                .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js", "/admin.html", "/admin.js").permitAll() 
+                // KRİTİK GÜNCELLEME: tasks.html ve tasks.js izin listesine eklendi
+                .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js", "/admin.html", "/admin.js", "/projects.html", "/projects.js", "/tasks.html", "/tasks.js").permitAll() 
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 
                 // API uçları için yetkilendirme

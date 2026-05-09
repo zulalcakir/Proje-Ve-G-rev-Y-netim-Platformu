@@ -1,0 +1,147 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const storedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('jwtToken');
+    
+    if (!storedUser || !token || token === "null") {
+        localStorage.clear();
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const currentUser = JSON.parse(storedUser);
+    updateUserInterface(currentUser);
+    projelerimiYukle(currentUser.id, token);
+});
+
+function updateUserInterface(user) {
+    const name = user.fullName || user.username;
+    document.getElementById('user-full-name').innerText = name;
+    document.getElementById('user-avatar').innerText = name.charAt(0).toUpperCase();
+    
+    const isAdmin = user.roles && user.roles.some(r => r.name === 'ROLE_ADMIN');
+    document.getElementById('user-role-label').innerText = isAdmin ? 'Yönetici' : 'Üye';
+}
+
+async function projelerimiYukle(userId, token) {
+    const container = document.getElementById('projects-container');
+    const headers = { 'Authorization': 'Bearer ' + token };
+
+    try {
+        // 1. Yönettiğim Projeleri Çek
+        const resProj = await fetch(`http://localhost:8080/api/projects/managed-by/${userId}`, { headers });
+        const yonettigimProjeler = resProj.ok ? await resProj.json() : [];
+
+        // 2. Atanmış Görevleri Çek (Görev aldığım projeleri bulmak için)
+        const resTask = await fetch(`http://localhost:8080/api/tasks/user/${userId}`, { headers });
+        const banaAtananGorevler = resTask.ok ? await resTask.json() : [];
+
+        // --- BİRLEŞTİRME VE BENZERSİZ HALE GETİRME ---
+        const projeMap = new Map(); // Hangi projede kaç görevim var tutacağız
+        
+        // Önce yönetici olduklarımızı ekleyelim
+        if(yonettigimProjeler) {
+            yonettigimProjeler.forEach(p => {
+                projeMap.set(p.id, { 
+                    ...p, 
+                    isManager: true, 
+                    totalTasks: 0, 
+                    completedTasks: 0 
+                });
+            });
+        }
+
+        // Sonra görevlerimizi projelerine atayalım
+        if(banaAtananGorevler) {
+            banaAtananGorevler.forEach(task => {
+                if (task.project) {
+                    const pId = task.project.id;
+                    // Eğer proje haritada yoksa (yani yönetici değil sadece görevliysek), haritaya ekle
+                    if (!projeMap.has(pId)) {
+                        projeMap.set(pId, { 
+                            ...task.project, 
+                            isManager: false, 
+                            totalTasks: 0, 
+                            completedTasks: 0 
+                        });
+                    }
+                    
+                    // Projenin görev istatistiklerini artır
+                    const p = projeMap.get(pId);
+                    p.totalTasks++;
+                    if (task.status === 'TAMAMLANDI') p.completedTasks++;
+                }
+            });
+        }
+
+        // --- ARAYÜZE KARTLARI BASTIRMA ---
+        container.innerHTML = '';
+        
+        if (projeMap.size === 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center mt-5">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3 opacity-25"></i>
+                    <p class="text-muted">Dahil olduğunuz aktif bir proje bulunmuyor.</p>
+                </div>`;
+            return;
+        }
+
+        // Map'teki projeleri HTML kartlarına dönüştür
+        projeMap.forEach((p) => {
+            const endDate = p.endDate ? new Date(p.endDate).toLocaleDateString('tr-TR') : 'Belirtilmedi';
+            const managerName = p.manager ? (p.manager.fullName || p.manager.username) : 'Yok';
+            
+            // Yüzdelik İlerleme Hesabı
+            let progress = 0;
+            if (p.totalTasks > 0) {
+                progress = Math.round((p.completedTasks / p.totalTasks) * 100);
+            } else if (p.isManager) {
+                progress = 0; // Yönetici ama görev atanmamışsa 0 görünsün
+            }
+
+            const roleBadge = p.isManager 
+                ? '<span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 ms-2">Yönetici</span>' 
+                : '<span class="badge bg-secondary bg-opacity-25 text-white-50 border border-secondary border-opacity-25 ms-2">Katılımcı</span>';
+
+            container.innerHTML += `
+                <div class="col-md-6 col-xl-4">
+                    <div class="project-card d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="text-white fw-bold m-0">${p.name}</h5>
+                            <i class="fas fa-rocket text-info opacity-50"></i>
+                        </div>
+                        <p class="text-muted small flex-grow-1" style="font-size: 0.8rem; line-height: 1.4;">
+                            ${p.description || 'Proje detayı girilmemiş.'}
+                        </p>
+                        
+                        <div class="mt-3 border-top border-white border-opacity-10 pt-3">
+                            <div class="d-flex justify-content-between small text-white-50 mb-1">
+                                <span><i class="fas fa-user-tie me-1"></i> ${managerName} ${roleBadge}</span>
+                                <span><i class="far fa-calendar-alt me-1"></i> ${endDate}</span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between small mt-3">
+                                <span class="text-info fw-bold">İlerlemeniz</span>
+                                <span class="text-white">${progress}%</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill" style="width: ${progress}%;"></div>
+                            </div>
+                            <div class="text-end mt-1 text-muted" style="font-size: 0.65rem;">
+                                ${p.completedTasks} / ${p.totalTasks} görev
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+    } catch (error) {
+        console.error("Projeler yüklenemedi:", error);
+        container.innerHTML = `<div class="col-12 text-center text-danger mt-5">Projeler yüklenirken bir hata oluştu.</div>`;
+    }
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = 'index.html';
+}
