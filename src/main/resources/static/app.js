@@ -44,7 +44,7 @@ function switchForm(formType) {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 3. ÜYE GİRİŞİ (HAFIZAYA KAYDETME EKLENDİ) ---
+    // --- 3. ÜYE GİRİŞİ (JWT TOKEN EKLENDİ) ---
     const userForm = document.getElementById('userForm');
     if(userForm) {
         userForm.addEventListener('submit', function(e) {
@@ -58,18 +58,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ username: usernameInput, password: passwordInput })
             })
             .then(response => {
-                if (response.ok) return response.json();
+                if (response.ok) return response.json(); // Artık bir Map (token ve user) dönüyor
                 else throw new Error("Kullanıcı adı veya şifre hatalı!");
             })
-            .then(user => {
+            .then(data => {
+                const user = data.user;
+                const token = data.token;
                 const isAdmin = user.roles && user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
                 if (isAdmin) {
                     throw new Error("Yöneticiler bu alanı kullanamaz. Lütfen Admin sekmesinden giriş yapın!");
                 }
                 
-                // KRİTİK: Giriş yapan kullanıcıyı hafızaya alıyoruz
+                // KRİTİK: Hem kullanıcıyı hem de Token'ı hafızaya alıyoruz
                 localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('jwtToken', token);
                 
                 window.location.href = 'dashboard.html'; 
             })
@@ -77,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 4. ADMIN GİRİŞİ (HAFIZAYA KAYDETME EKLENDİ) ---
+    // --- 4. ADMIN GİRİŞİ (JWT TOKEN EKLENDİ) ---
     const adminForm = document.getElementById('adminForm');
     if(adminForm) {
         adminForm.addEventListener('submit', function(e) {
@@ -94,12 +97,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) return response.json();
                 else throw new Error("Yönetici kodu veya şifre yanlış!");
             })
-            .then(user => {
+            .then(data => {
+                const user = data.user;
+                const token = data.token;
                 const isAdmin = user.roles && user.roles.some(role => role.name === 'ROLE_ADMIN');
                 
                 if (isAdmin) {
-                    // KRİTİK: Admin bilgisini hafızaya alıyoruz
+                    // KRİTİK: Admin bilgisini ve Token'ı hafızaya alıyoruz
                     localStorage.setItem('user', JSON.stringify(user));
+                    localStorage.setItem('jwtToken', token);
                     window.location.href = 'admin.html';
                 } else {
                     throw new Error("Bu alan sadece yöneticiler içindir!");
@@ -115,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         registerForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const user = {
-                fullName: document.getElementById('reg-name').value, // Ad Soyad eklendi
+                fullName: document.getElementById('reg-name').value, 
                 username: document.getElementById('reg-username').value,
                 email: document.getElementById('reg-email').value,
                 password: document.getElementById('reg-password').value

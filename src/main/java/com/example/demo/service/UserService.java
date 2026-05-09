@@ -7,7 +7,9 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
+import java.util.stream.Collectors; // Listeyi filtrelemek için eklendi
 
 @Service
 public class UserService {
@@ -25,10 +27,12 @@ public class UserService {
     private ActivityLogService logService; 
 
     /**
-     * Tüm kullanıcıları listeler
+     * Tüm kullanıcıları listeler (SADECE AKTİF OLANLARI GETİRİR)
      */
     public List<User> getAllUsers() { 
-        return userRepository.findAll(); 
+        return userRepository.findAll().stream()
+                .filter(User::isActive) // active = false olanlar gizlenir
+                .collect(Collectors.toList()); 
     }
 
     /**
@@ -72,16 +76,19 @@ public class UserService {
     }
 
     /**
-     * Kullanıcı siler ve log tutar
+     * Kullanıcı siler (HARD DELETE YERİNE SOFT DELETE / PASİFE ALMA)
      */
     public void deleteUser(Long id) { 
         userRepository.findById(id).ifPresent(user -> {
+            // Veritabanından tamamen silmek yerine pasife alıyoruz (Soft Delete)
+            user.setActive(false);
+            userRepository.save(user); // Güncellenmiş haliyle kaydediyoruz
+            
             try {
-                logService.logAction("Kullanıcı sistemden silindi: " + user.getUsername(), null);
+                logService.logAction("Kullanıcı sistemden silindi (Pasife alındı): " + user.getUsername(), null);
             } catch (Exception e) {
                 System.err.println("Silme logu yazılamadı.");
             }
-            userRepository.deleteById(id);
         });
     }
 }

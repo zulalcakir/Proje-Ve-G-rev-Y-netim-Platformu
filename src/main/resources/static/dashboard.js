@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Tarayıcı hafızasından giriş yapan kullanıcıyı al
+    // 1. Tarayıcı hafızasından giriş yapan kullanıcıyı ve token'ı al
     const storedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('jwtToken'); // Token'ı alıyoruz
     
-    if (!storedUser) {
-        // Eğer giriş yapılmamışsa login sayfasına geri gönder
+    // Eğer giriş yapılmamışsa veya token yoksa login sayfasına geri gönder
+    if (!storedUser || !token) {
         window.location.href = 'index.html';
         return;
     }
@@ -13,10 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. Arayüzdeki isim alanlarını güncelle
     updateUserInterface(currentUser);
 
-    // 3. Verileri SADECE bu kullanıcıya özel olarak çek/filtrele
-    istatistikleriGuncelle(currentUser.id);
-    gorevListesiniYukle(currentUser.id);
-    sonLoglariYukle(currentUser.id);
+    // 3. Verileri SADECE bu kullanıcıya özel olarak ve TOKEN ile çek
+    istatistikleriGuncelle(currentUser.id, token);
+    gorevListesiniYukle(currentUser.id, token);
+    sonLoglariYukle(currentUser.id, token);
 });
 
 // Arayüzdeki isim ve profil kısımlarını dolduran fonksiyon
@@ -34,24 +35,37 @@ function updateUserInterface(user) {
     }
 }
 
+// Fetch istekleri için ortak başlık (Header) hazırlayıcı
+function getAuthHeaders(token) {
+    return {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+    };
+}
+
 // 1. İstatistikleri SADECE Kullanıcıya Göre Filtrele
-function istatistikleriGuncelle(userId) {
+function istatistikleriGuncelle(userId, token) {
     // Sadece benim projelerimi say
-    fetch('http://localhost:8080/api/projects')
-        .then(res => res.json())
+    fetch('http://localhost:8080/api/projects', { headers: getAuthHeaders(token) })
+        .then(res => {
+            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
+            return res.json();
+        })
         .then(projeler => {
-            // Eğer backend'de 'owner' veya 'createdBy' varsa ona göre filtrele
-            const benimProjelerim = projeler.filter(p => p.ownerId === userId || !p.ownerId); // Geçici mantık
+            const benimProjelerim = projeler.filter(p => p.createdBy && p.createdBy.id === userId);
             document.getElementById('proje-sayisi').innerText = benimProjelerim.length;
         })
         .catch(err => console.error("Proje sayıları alınamadı:", err));
 
     // Sadece benim görevlerimi say
-    fetch('http://localhost:8080/api/tasks')
-        .then(res => res.json())
+    fetch('http://localhost:8080/api/tasks', { headers: getAuthHeaders(token) })
+        .then(res => {
+            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
+            return res.json();
+        })
         .then(gorevler => {
             // Sadece bu kullanıcıya atanmış görevler
-            const benimGorevlerim = gorevler.filter(g => g.assignedUserId === userId);
+            const benimGorevlerim = gorevler.filter(g => g.assignedTo && g.assignedTo.id === userId);
             document.getElementById('gorev-sayisi').innerText = benimGorevlerim.length;
             
             const tamamlananlar = benimGorevlerim.filter(g => g.status === 'Tamamlandı' || g.status === 'Completed');
@@ -61,15 +75,18 @@ function istatistikleriGuncelle(userId) {
 }
 
 // 2. SADECE Kullanıcının Kendi Görevlerini Yükle
-function gorevListesiniYukle(userId) {
+function gorevListesiniYukle(userId, token) {
     const container = document.getElementById('task-list-container');
 
-    fetch('http://localhost:8080/api/tasks')
-        .then(res => res.json())
+    fetch('http://localhost:8080/api/tasks', { headers: getAuthHeaders(token) })
+        .then(res => {
+            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
+            return res.json();
+        })
         .then(gorevler => {
             container.innerHTML = '';
 
-            const benimGorevlerim = gorevler.filter(g => g.assignedUserId === userId);
+            const benimGorevlerim = gorevler.filter(g => g.assignedTo && g.assignedTo.id === userId);
 
             if (benimGorevlerim.length === 0) {
                 container.innerHTML = '<p class="text-muted text-center mt-5">Henüz sana atanmış bir görev yok.</p>';
@@ -89,15 +106,21 @@ function gorevListesiniYukle(userId) {
                     </div>
                 `;
             });
+        })
+        .catch(err => {
+            container.innerHTML = '<p class="text-danger text-center mt-5">Görevler yüklenirken hata oluştu.</p>';
         });
 }
 
 // 3. SADECE Kullanıcının Kendi İşlem Loglarını Yükle
-function sonLoglariYukle(userId) {
+function sonLoglariYukle(userId, token) {
     const logBox = document.getElementById('recent-logs');
 
-    fetch('http://localhost:8080/api/logs')
-        .then(res => res.json())
+    fetch('http://localhost:8080/api/logs', { headers: getAuthHeaders(token) })
+        .then(res => {
+            if (!res.ok) throw new Error("Yetkisiz erişim veya sunucu hatası");
+            return res.json();
+        })
         .then(logs => {
             logBox.innerHTML = '';
 

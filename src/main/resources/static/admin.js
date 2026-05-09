@@ -1,12 +1,20 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Sayfa yüklendiğinde tabloları ve logları getir
-    verileriYukle();
-    loglariYukle();
+    // 1. Tarayıcı hafızasından token'ı kontrol et
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+        // Yetkisiz erişim varsa giriş sayfasına at
+        window.location.href = 'index.html';
+        return;
+    }
 
-    // 2. Her 30 saniyede bir logları arka planda otomatik yenile (Canlı akış için)
-    setInterval(loglariYukle, 30000);
+    // 2. Sayfa yüklendiğinde tabloları ve logları getir (Token ile)
+    verileriYukle(token);
+    loglariYukle(token);
 
-    // 3. Yeni Kullanıcı Formunu Dinle (Eksik olan kısım buydu)
+    // 3. Her 30 saniyede bir logları arka planda otomatik yenile (Token ile)
+    setInterval(() => loglariYukle(token), 30000);
+
+    // 4. Yeni Kullanıcı Formunu Dinle
     const adminAddUserForm = document.getElementById('adminAddUserForm');
     if(adminAddUserForm) {
         adminAddUserForm.addEventListener('submit', function(e) {
@@ -19,16 +27,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 password: document.getElementById('admin-reg-password').value
             };
 
+            // Post isteğine Token EKLENDİ
             fetch('http://localhost:8080/api/users', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
                 body: JSON.stringify(newUser)
             })
             .then(response => {
                 if(response.ok) {
                     closeUserModal(); // Başarılıysa pencereyi kapat
-                    verileriYukle();  // Tabloyu tazele
-                    loglariYukle();   // Loglara "Yeni kullanıcı eklendi" düşsün
+                    verileriYukle(token);  // Tabloyu tazele
+                    loglariYukle(token);   // Loglara "Yeni kullanıcı eklendi" düşsün
                     adminAddUserForm.reset(); // Formu temizle
                 } else {
                     alert("Kullanıcı eklenirken bir hata oluştu. Kullanıcı adı veya e-posta alınmış olabilir.");
@@ -57,9 +69,18 @@ window.onclick = function(event) {
 }
 
 // --- VERİ YÜKLEME ---
-function verileriYukle() {
-    fetch('http://localhost:8080/api/users')
-    .then(res => res.json())
+function verileriYukle(token) {
+    // Ortak Header
+    const authHeaders = {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+    };
+
+    fetch('http://localhost:8080/api/users', { headers: authHeaders })
+    .then(res => {
+        if(!res.ok) throw new Error("Yetkisiz erişim");
+        return res.json();
+    })
     .then(users => {
         document.getElementById('userCount').innerText = users.length;
         const tbody = document.getElementById('adminUserTable');
@@ -88,21 +109,31 @@ function verileriYukle() {
                 </tr>
             `;
         });
-    });
+    })
+    .catch(err => console.error("Kullanıcılar yüklenemedi:", err));
 
-    fetch('http://localhost:8080/api/projects')
-    .then(res => res.json())
+    fetch('http://localhost:8080/api/projects', { headers: authHeaders })
+    .then(res => {
+        if(!res.ok) throw new Error("Yetkisiz erişim");
+        return res.json();
+    })
     .then(projects => {
         document.getElementById('projectCount').innerText = projects.length;
-    });
+    })
+    .catch(err => console.error("Projeler yüklenemedi:", err));
 }
 
 // --- LOGLARI YÜKLEME ---
-function loglariYukle() {
+function loglariYukle(token) {
     const logContainer = document.getElementById('systemLogs');
     
-    fetch('http://localhost:8080/api/logs')
-    .then(res => res.json())
+    fetch('http://localhost:8080/api/logs', { 
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if(!res.ok) throw new Error("Yetkisiz erişim");
+        return res.json();
+    })
     .then(logs => {
         if (logs.length === 0) {
             logContainer.innerHTML = '<div class="text-muted">Henüz bir hareket kaydedilmedi.</div>';
@@ -129,20 +160,28 @@ function loglariYukle() {
         });
     })
     .catch(err => {
-        logContainer.innerHTML = '<div class="text-danger">Loglar yüklenirken sunucuya ulaşılamadı.</div>';
+        logContainer.innerHTML = '<div class="text-danger">Loglar yüklenirken sunucuya ulaşılamadı veya yetkiniz yok.</div>';
     });
 }
 
 // --- SİLME İŞLEMİ ---
 function kullaniciSil(id) {
+    const token = localStorage.getItem('jwtToken'); // Silme işlemi için güncel token'ı al
+    if (!token) return;
+
     if(confirm('Bu kullanıcıyı tamamen silmek istediğinize emin misiniz?')) {
-        fetch(`http://localhost:8080/api/users/${id}`, { method: 'DELETE' })
+        fetch(`http://localhost:8080/api/users/${id}`, { 
+            method: 'DELETE',
+            headers: { 
+                'Authorization': 'Bearer ' + token 
+            }
+        })
         .then(res => {
             if(res.ok) {
-                verileriYukle(); 
-                loglariYukle();  
+                verileriYukle(token); 
+                loglariYukle(token);  
             } else {
-                alert("Kullanıcı silinirken bir hata oluştu.");
+                alert("Kullanıcı silinirken bir hata oluştu veya yetkiniz yok.");
             }
         })
         .catch(err => console.error("Silme hatası:", err));
