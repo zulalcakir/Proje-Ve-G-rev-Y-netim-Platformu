@@ -1,25 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Tarayıcı hafızasından token'ı kontrol et
+    // 1. Tarayıcı hafızasından kullanıcı ve token kontrolü
+    const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('jwtToken');
-    if (!token) {
-        // Yetkisiz erişim varsa giriş sayfasına at
+    
+    if (!storedUser || !token) {
         window.location.href = 'index.html';
         return;
     }
 
-    // 2. Sayfa yüklendiğinde tabloları ve logları getir (Token ile)
-    verileriYukle(token);
+    const currentUser = JSON.parse(storedUser);
+    const isAdmin = currentUser.roles && currentUser.roles.some(role => role.name === 'ROLE_ADMIN');
+
+    if (!isAdmin) {
+        alert("Bu alana erişim yetkiniz yok!");
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    // 2. İlk Yükleme
+    istatistikleriYukle(token);
+    kullaniciTablosunuYukle(token);
     loglariYukle(token);
 
-    // 3. Her 30 saniyede bir logları arka planda otomatik yenile (Token ile)
+    // 3. Otomatik Yenileme (Loglar için)
     setInterval(() => loglariYukle(token), 30000);
 
-    // 4. Yeni Kullanıcı Formunu Dinle
+    // --- FORM DİNLEYİCİLERİ ---
+
+    // A - Yeni Kullanıcı Formu
     const adminAddUserForm = document.getElementById('adminAddUserForm');
     if(adminAddUserForm) {
         adminAddUserForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const newUser = {
                 fullName: document.getElementById('admin-reg-name').value,
                 email: document.getElementById('admin-reg-email').value,
@@ -27,163 +39,167 @@ document.addEventListener('DOMContentLoaded', function() {
                 password: document.getElementById('admin-reg-password').value
             };
 
-            // Post isteğine Token EKLENDİ
             fetch('http://localhost:8080/api/users', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                 body: JSON.stringify(newUser)
             })
-            .then(response => {
-                if(response.ok) {
-                    closeUserModal(); // Başarılıysa pencereyi kapat
-                    verileriYukle(token);  // Tabloyu tazele
-                    loglariYukle(token);   // Loglara "Yeni kullanıcı eklendi" düşsün
-                    adminAddUserForm.reset(); // Formu temizle
+            .then(res => {
+                if(res.ok) {
+                    alert("Kullanıcı başarıyla oluşturuldu.");
+                    closeUserModal(); 
+                    kullaniciTablosunuYukle(token);
+                    istatistikleriYukle(token);
+                    loglariYukle(token);
+                    adminAddUserForm.reset();
+                }
+            });
+        });
+    }
+
+    // B - Yeni Proje Formu (YENİ EKLENDİ)
+    const adminAddProjectForm = document.getElementById('adminAddProjectForm');
+    if(adminAddProjectForm) {
+        adminAddProjectForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newProject = {
+                name: document.getElementById('proj-name').value,
+                description: document.getElementById('proj-desc').value,
+                endDate: document.getElementById('proj-deadline').value,
+                // İlişkili nesneleri gönderiyoruz:
+                manager: { id: document.getElementById('proj-manager').value },
+                createdBy: { id: currentUser.id } 
+            };
+
+            fetch('http://localhost:8080/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(newProject)
+            })
+            .then(res => {
+                if(res.ok) {
+                    alert("Proje başarıyla başlatıldı!");
+                    closeProjectModal();
+                    istatistikleriYukle(token); // Sayaçlar güncellensin
+                    loglariYukle(token);       // Loglara düşsün
+                    adminAddProjectForm.reset();
                 } else {
-                    alert("Kullanıcı eklenirken bir hata oluştu. Kullanıcı adı veya e-posta alınmış olabilir.");
+                    alert("Proje oluşturulurken bir hata oluştu.");
                 }
             })
-            .catch(err => console.error("Kayıt Hatası:", err));
+            .catch(err => console.error("Proje Kayıt Hatası:", err));
         });
     }
 });
 
-// --- MODAL KONTROLLERİ ---
-function openUserModal() {
-    document.getElementById('userModal').style.display = 'block';
-}
+// --- VERİ YÜKLEME FONKSİYONLARI ---
 
-function closeUserModal() {
-    document.getElementById('userModal').style.display = 'none';
-}
-
-// Pencere dışında bir yere tıklanırsa kapat
-window.onclick = function(event) {
-    const modal = document.getElementById('userModal');
-    if (event.target == modal) {
-        closeUserModal();
-    }
-}
-
-// --- VERİ YÜKLEME ---
-function verileriYukle(token) {
-    // Ortak Header
-    const authHeaders = {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-    };
-
-    fetch('http://localhost:8080/api/users', { headers: authHeaders })
-    .then(res => {
-        if(!res.ok) throw new Error("Yetkisiz erişim");
-        return res.json();
-    })
-    .then(users => {
-        document.getElementById('userCount').innerText = users.length;
-        const tbody = document.getElementById('adminUserTable');
-        tbody.innerHTML = '';
-
-        users.forEach(user => {
-            const roles = user.roles && user.roles.length > 0 
-                          ? user.roles.map(r => r.name).join(', ') 
-                          : 'ÜYE';
-            
-            tbody.innerHTML += `
-                <tr>
-                    <td>${user.id}</td>
-                    <td class="fw-bold">${user.username}</td>
-                    <td>${user.email || 'Girilmemiş'}</td>
-                    <td><span class="badge bg-warning text-dark">${roles}</span></td>
-                    <td>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="status-${user.id}" checked>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-info me-1">Güncelle</button>
-                        <button class="btn btn-sm btn-danger" onclick="kullaniciSil(${user.id})">Sil</button>
-                    </td>
-                </tr>
-            `;
-        });
-    })
-    .catch(err => console.error("Kullanıcılar yüklenemedi:", err));
-
-    fetch('http://localhost:8080/api/projects', { headers: authHeaders })
-    .then(res => {
-        if(!res.ok) throw new Error("Yetkisiz erişim");
-        return res.json();
-    })
-    .then(projects => {
-        document.getElementById('projectCount').innerText = projects.length;
-    })
-    .catch(err => console.error("Projeler yüklenemedi:", err));
-}
-
-// --- LOGLARI YÜKLEME ---
-function loglariYukle(token) {
-    const logContainer = document.getElementById('systemLogs');
-    
-    fetch('http://localhost:8080/api/logs', { 
+function istatistikleriYukle(token) {
+    fetch('http://localhost:8080/api/admin/stats', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => {
-        if(!res.ok) throw new Error("Yetkisiz erişim");
-        return res.json();
-    })
-    .then(logs => {
-        if (logs.length === 0) {
-            logContainer.innerHTML = '<div class="text-muted">Henüz bir hareket kaydedilmedi.</div>';
-            return;
-        }
-
-        logContainer.innerHTML = ''; 
-        
-        logs.reverse().forEach(log => {
-            const date = new Date(log.timestamp);
-            const timeStr = date.toLocaleTimeString('tr-TR');
-            
-            let textColor = 'text-white';
-            if (log.action.includes('silindi') || log.action.includes('Hata')) textColor = 'text-danger';
-            else if (log.action.includes('eklendi') || log.action.includes('kayıt')) textColor = 'text-success';
-            else if (log.action.includes('giriş')) textColor = 'text-info';
-
-            logContainer.innerHTML += `
-                <div class="${textColor} mb-1">
-                    <span class="text-secondary">[${timeStr}]</span> 
-                    <strong>${log.user ? log.user.username : 'SİSTEM'}:</strong> ${log.action}
-                </div>
-            `;
-        });
-    })
-    .catch(err => {
-        logContainer.innerHTML = '<div class="text-danger">Loglar yüklenirken sunucuya ulaşılamadı veya yetkiniz yok.</div>';
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('totalUsers').innerText = data.totalUsers;
+        document.getElementById('totalProjects').innerText = data.totalProjects;
+        document.getElementById('completedTasks').innerText = data.completedTasks;
     });
 }
 
-// --- SİLME İŞLEMİ ---
-function kullaniciSil(id) {
-    const token = localStorage.getItem('jwtToken'); // Silme işlemi için güncel token'ı al
-    if (!token) return;
+function kullaniciTablosunuYukle(token) {
+    fetch('http://localhost:8080/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(users => {
+        const tbody = document.getElementById('adminUserTable');
+        tbody.innerHTML = '';
+        users.forEach(user => {
+            const roles = user.roles.map(r => `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 small" style="font-size:0.6rem">${r.name}</span>`).join(' ');
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td class="ps-4 text-muted small">#${user.id}</td>
+                    <td class="fw-bold text-white">${user.fullName || '-'}</td>
+                    <td class="text-info">@${user.username}</td>
+                    <td class="small text-white-50">${user.email}</td>
+                    <td>${roles}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger border-0" onclick="kullaniciSil(${user.id})">
+                            <i class="fas fa-trash"></i> SİL
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
 
-    if(confirm('Bu kullanıcıyı tamamen silmek istediğinize emin misiniz?')) {
-        fetch(`http://localhost:8080/api/users/${id}`, { 
-            method: 'DELETE',
-            headers: { 
-                'Authorization': 'Bearer ' + token 
-            }
-        })
-        .then(res => {
-            if(res.ok) {
-                verileriYukle(token); 
-                loglariYukle(token);  
-            } else {
-                alert("Kullanıcı silinirken bir hata oluştu veya yetkiniz yok.");
-            }
-        })
-        .catch(err => console.error("Silme hatası:", err));
-    }
+function loglariYukle(token) {
+    const logContainer = document.getElementById('systemLogs');
+    fetch('http://localhost:8080/api/logs', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(res => res.json())
+    .then(logs => {
+        logContainer.innerHTML = ''; 
+        logs.slice(-20).reverse().forEach(log => {
+            const timeStr = new Date(log.timestamp).toLocaleTimeString('tr-TR');
+            let actionColor = 'text-white-50';
+            if (log.action.includes('silindi')) actionColor = 'text-danger';
+            else if (log.action.includes('eklendi') || log.action.includes('başlatıldı')) actionColor = 'text-success';
+
+            logContainer.innerHTML += `
+                <div class="mb-1" style="font-size: 0.8rem;">
+                    <span class="text-info">[${timeStr}]</span> 
+                    <span class="text-warning fw-bold">${log.user ? log.user.username : 'SİSTEM'}:</span> 
+                    <span class="${actionColor}">${log.action}</span>
+                </div>`;
+        });
+    });
+}
+
+// --- MODAL VE YARDIMCI KONTROLLER ---
+
+// Proje Sorumlusu (Manager) listesini dinamik doldur
+function populateManagerSelect() {
+    const token = localStorage.getItem('jwtToken');
+    const select = document.getElementById('proj-manager');
+    
+    fetch('http://localhost:8080/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(users => {
+        select.innerHTML = '<option value="">Sorumlu Seçin...</option>';
+        users.forEach(u => {
+            select.innerHTML += `<option value="${u.id}">${u.fullName || u.username}</option>`;
+        });
+    });
+}
+
+function openUserModal() { document.getElementById('userModal').style.display = 'block'; }
+function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
+
+function openProjectModal() { 
+    document.getElementById('projectModal').style.display = 'block';
+    populateManagerSelect(); // Modal açıldığında listeyi tazele
+}
+function closeProjectModal() { document.getElementById('projectModal').style.display = 'none'; }
+
+// Dışarı tıklayınca kapansın
+window.onclick = (e) => {
+    if (e.target == document.getElementById('userModal')) closeUserModal();
+    if (e.target == document.getElementById('projectModal')) closeProjectModal();
+}
+
+function kullaniciSil(id) {
+    const token = localStorage.getItem('jwtToken');
+    if(!confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) return;
+    fetch(`http://localhost:8080/api/users/${id}`, { 
+        method: 'DELETE', 
+        headers: { 'Authorization': 'Bearer ' + token } 
+    }).then(res => { if(res.ok) { kullaniciTablosunuYukle(token); istatistikleriYukle(token); loglariYukle(token); } });
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = 'index.html';
 }
