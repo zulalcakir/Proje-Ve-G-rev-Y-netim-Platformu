@@ -68,6 +68,10 @@
             background: #1a1a1a;
             color: #fff;
         }
+        
+        /* Dosya Ekleri Scrollbar */
+        #attachments-container::-webkit-scrollbar { width: 5px; height: 5px; }
+        #attachments-container::-webkit-scrollbar-thumb { background: #ff416c; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -304,13 +308,19 @@
     <div id="taskDetailModal" class="modal">
         <div class="glass-card modal-content p-4 p-md-5 position-relative">
             <span class="close-btn" onclick="closeTaskDetailModal()" style="position: absolute; right: 25px; top: 15px; cursor: pointer; font-size: 25px;">&times;</span>
+            
             <div class="mb-3">
                 <span id="modal-task-project" class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 mb-2">Proje</span>
                 <h3 id="modal-task-title" class="cool-title mb-2 text-white" style="font-size: 1.5rem;">Görev</h3>
                 <p id="modal-task-desc" class="text-white-50 small mb-4">Açıklama...</p>
             </div>
-            <h6 class="text-white mb-3 border-left border-info ps-2" style="border-left: 3px solid #ff416c;">Yorumlar ve Notlar</h6>
+
+            <h6 class="text-white mb-3 border-left border-info ps-2 section-title" style="font-size: 0.9rem; border-left: 3px solid #ff007f;">Proje Dosyaları</h6>
+            <div id="attachments-container" class="mb-4 d-flex flex-wrap gap-2" style="max-height: 100px; overflow-y: auto;">
+                </div>
+            <h6 class="text-white mb-3 border-left border-info ps-2 section-title" style="border-left: 3px solid #ff416c;">Yorumlar ve Notlar</h6>
             <div id="comments-container" class="mb-4 pe-2" style="max-height: 250px; overflow-y: auto;"></div>
+            
             <form id="addCommentForm" class="mt-auto">
                 <input type="hidden" id="comment-task-id">
                 <div class="input-group">

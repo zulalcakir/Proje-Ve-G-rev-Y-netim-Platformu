@@ -88,7 +88,7 @@ function statusGuncelle(taskId, newStatus) {
     });
 }
 
-// --- YENİ EKLENEN: GÖREV DETAY VE YORUM İŞLEMLERİ ---
+// --- YENİ EKLENEN: GÖREV DETAY, DOSYA VE YORUM İŞLEMLERİ ---
 
 function openTaskDetailModal(taskId) {
     document.getElementById('taskDetailModal').style.display = 'block';
@@ -104,13 +104,128 @@ function openTaskDetailModal(taskId) {
             document.getElementById('modal-task-desc').innerText = task.description || 'Bu görev için detaylı açıklama girilmemiş.';
         });
 
-    // 2. Göreve Ait Yorumları Çek
+    // 2. Göreve Ait Dosyaları Çek
+    dosyalariGetir(taskId, token);
+
+    // 3. Göreve Ait Yorumları Çek
     yorumlariYukle(taskId, token);
 }
 
 function closeTaskDetailModal() {
     document.getElementById('taskDetailModal').style.display = 'none';
 }
+
+// --- DOSYA YÜKLEME VE LİSTELEME FONKSİYONLARI ---
+
+function dosyaYukle() {
+    const taskId = document.getElementById('comment-task-id').value;
+    const fileInput = document.getElementById('task-file-input');
+    const file = fileInput.files[0];
+    const token = localStorage.getItem('jwtToken');
+
+    if (!file) {
+        alert("Lütfen önce yüklenecek bir dosya seçin!");
+        return;
+    }
+
+    // Dosyayı göndermek için özel FormData kargosu oluşturuyoruz
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Yükleniyor bilgisi ver
+    const container = document.getElementById('attachments-container');
+    container.innerHTML = '<span class="text-warning small"><i class="fas fa-spinner fa-spin me-2"></i>Dosya yükleniyor, lütfen bekleyin...</span>';
+
+    fetch(`http://localhost:8080/api/attachments/upload/${taskId}`, {
+        method: 'POST',
+        headers: { 
+            'Authorization': 'Bearer ' + token 
+            // DİKKAT: FormData kullandığımız için 'Content-Type' yazmıyoruz, tarayıcı kendisi otomatik ayarlıyor.
+        }, 
+        body: formData
+    })
+    .then(async res => {
+        const msg = await res.text();
+        if(res.ok) {
+            fileInput.value = ''; // Seçilen dosyayı temizle
+            dosyalariGetir(taskId, token); // Güncel listeyi yeniden çek
+        } else {
+            alert("Yükleme Başarısız: " + msg);
+            dosyalariGetir(taskId, token); // Hata olsa da listeyi eski haline getir
+        }
+    })
+    .catch(err => {
+        alert("Bağlantı hatası: Dosya yüklenemedi!");
+        dosyalariGetir(taskId, token);
+    });
+}
+
+// --- GÜNCELLENDİ: DOSYALARI GETİRME FONKSİYONU ---
+function dosyalariGetir(taskId, token) {
+    const container = document.getElementById('attachments-container');
+    container.innerHTML = '<span class="text-muted small"><i class="fas fa-spinner fa-spin me-2"></i>Dosyalar taranıyor...</span>';
+
+    fetch(`http://localhost:8080/api/attachments/task/${taskId}`, { 
+        headers: { 'Authorization': 'Bearer ' + token } 
+    })
+    .then(res => res.json())
+    .then(attachments => {
+        container.innerHTML = '';
+        
+        if (attachments.length === 0) {
+            container.innerHTML = '<span class="text-white-50 small" style="font-size: 0.8rem;">Bu göreve henüz dosya eklenmemiş.</span>';
+            return;
+        }
+
+        // YENİ: Link yerine buton kullanıyoruz ve dosyaIndir fonksiyonunu tetikliyoruz
+        attachments.forEach(att => {
+            container.innerHTML += `
+                <button type="button" onclick="dosyaIndir(${att.id}, '${att.fileName}')" 
+                   class="btn btn-sm btn-outline-info rounded-pill mb-2 me-2" 
+                   style="font-size: 0.75rem; border-color: rgba(0, 210, 255, 0.3);">
+                   <i class="fas fa-download me-1"></i> ${att.fileName}
+                </button>
+            `;
+        });
+    })
+    .catch(err => container.innerHTML = '<span class="text-danger small">Dosyalar çekilemedi.</span>');
+}
+
+// --- YENİ EKLENDİ: GÜVENLİ DOSYA İNDİRME MOTORU ---
+function dosyaIndir(attachmentId, fileName) {
+    const token = localStorage.getItem('jwtToken');
+    const container = document.getElementById('attachments-container');
+    const originalHtml = container.innerHTML;
+    
+    container.innerHTML = `<span class="text-info small"><i class="fas fa-spinner fa-spin me-2"></i> ${fileName} indiriliyor...</span>`;
+
+    fetch(`http://localhost:8080/api/attachments/download/${attachmentId}`, {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token } 
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Dosya indirilemedi! Yetkiniz olmayabilir.");
+        return response.blob(); 
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName; 
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        container.innerHTML = originalHtml; 
+    })
+    .catch(err => {
+        alert(err.message);
+        container.innerHTML = originalHtml;
+    });
+}
+
+// --- YORUM (NOT) İŞLEMLERİ ---
 
 function yorumlariYukle(taskId, token) {
     const container = document.getElementById('comments-container');
@@ -143,7 +258,7 @@ function yorumlariYukle(taskId, token) {
         });
 }
 
-// 3. Yeni Yorum Gönderme Formunu Dinle
+// Yeni Yorum Gönderme Formunu Dinle
 document.getElementById('addCommentForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const taskId = document.getElementById('comment-task-id').value;

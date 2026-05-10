@@ -86,13 +86,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // C - Görev Atama (Priority Eklendi!)
+    // C - Görev Atama
     const adminAddTaskForm = document.getElementById('adminAddTaskForm');
     if(adminAddTaskForm) {
         adminAddTaskForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // DİKKAT: Artık priority bilgisini de alıyoruz
             const newTask = {
                 title: document.getElementById('task-title').value,
                 description: document.getElementById('task-desc').value,
@@ -100,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 status: 'BEKLEMEDE',
                 project: { id: parseInt(document.getElementById('task-project').value) },
                 assignedTo: { id: parseInt(document.getElementById('task-user').value) },
-                priority: { id: parseInt(document.getElementById('task-priority').value) } // YENİ EKLENDİ
+                priority: { id: parseInt(document.getElementById('task-priority').value) } 
             };
 
             fetch('http://localhost:8080/api/tasks', {
@@ -170,7 +169,7 @@ function verileriTazele(token) {
     projeleriYukle(token); 
     loglariYukle(token);
     gorevTablosunuYukle(token);
-    cezaSiralamasiniYukle(token); // CEZA EKLENDİ
+    cezaSiralamasiniYukle(token); 
 }
 
 // --- VERİ YÜKLEME FONKSİYONLARI ---
@@ -277,7 +276,6 @@ function gorevTablosunuYukle(token) {
     });
 }
 
-// --- YENİ EKLENDİ: CEZA SIRALAMASI YÜKLEME ---
 function cezaSiralamasiniYukle(token) {
     fetch('http://localhost:8080/api/penalties', { headers: { 'Authorization': 'Bearer ' + token } })
     .then(handleResponse)
@@ -380,7 +378,7 @@ function openTaskModal() {
     document.getElementById('taskModal').style.display = 'block';
     populatePersonelSelect('task-user');
     populateProjectSelect('task-project');
-    populatePrioritySelect('task-priority'); // YENİ EKLENDİ
+    populatePrioritySelect('task-priority'); 
 }
 function closeTaskModal() { document.getElementById('taskModal').style.display = 'none'; }
 
@@ -397,6 +395,7 @@ function openTaskDetailModal(taskId) {
             document.getElementById('modal-task-desc').innerText = task.description || 'Detay girilmemiş.';
         });
 
+    dosyalariGetir(taskId, token);
     yorumlariYukle(taskId, token);
 }
 
@@ -446,6 +445,72 @@ function populatePrioritySelect(elementId) {
             const priorityName = p.level || p.name || `Seviye ${p.id}`;
             select.innerHTML += `<option value="${p.id}">${priorityName}</option>`;
         });
+    });
+}
+
+// --- GÜNCELLENDİ: DOSYALARI GETİRME FONKSİYONU ---
+function dosyalariGetir(taskId, token) {
+    const container = document.getElementById('attachments-container');
+    if(!container) return; 
+    
+    container.innerHTML = '<span class="text-muted small"><i class="fas fa-spinner fa-spin me-2"></i>Dosyalar taranıyor...</span>';
+
+    fetch(`http://localhost:8080/api/attachments/task/${taskId}`, { 
+        headers: { 'Authorization': 'Bearer ' + token } 
+    })
+    .then(res => res.json())
+    .then(attachments => {
+        container.innerHTML = '';
+        if (attachments.length === 0) {
+            container.innerHTML = '<span class="text-white-50 small" style="font-size: 0.8rem;">Bu göreve henüz dosya eklenmemiş.</span>';
+            return;
+        }
+
+        attachments.forEach(att => {
+            // YENİ: Link yerine buton kullanıyoruz ve dosyaIndir fonksiyonunu tetikliyoruz.
+            container.innerHTML += `
+                <button onclick="dosyaIndir(${att.id}, '${att.fileName}')" 
+                   class="btn btn-sm btn-outline-info rounded-pill mb-2 me-2" 
+                   style="font-size: 0.75rem; border-color: rgba(0, 210, 255, 0.3);">
+                   <i class="fas fa-download me-1"></i> ${att.fileName}
+                </button>
+            `;
+        });
+    })
+    .catch(err => container.innerHTML = '<span class="text-danger small">Dosyalar çekilemedi.</span>');
+}
+
+// --- YENİ EKLENDİ: GÜVENLİ DOSYA İNDİRME MOTORU ---
+function dosyaIndir(attachmentId, fileName) {
+    const token = localStorage.getItem('jwtToken');
+    const container = document.getElementById('attachments-container');
+    const originalHtml = container.innerHTML;
+    
+    container.innerHTML = `<span class="text-info small"><i class="fas fa-spinner fa-spin me-2"></i> ${fileName} indiriliyor...</span>`;
+
+    fetch(`http://localhost:8080/api/attachments/download/${attachmentId}`, {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token } 
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Dosya indirilemedi! Yetkiniz olmayabilir.");
+        return response.blob(); 
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName; 
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        container.innerHTML = originalHtml; 
+    })
+    .catch(err => {
+        alert(err.message);
+        container.innerHTML = originalHtml;
     });
 }
 

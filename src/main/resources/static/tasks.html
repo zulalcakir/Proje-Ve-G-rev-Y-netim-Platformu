@@ -39,6 +39,10 @@
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         #comments-container::-webkit-scrollbar { width: 5px; }
         #comments-container::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 5px; }
+        
+        /* Dosya Ekleri Scrollbar */
+        #attachments-container::-webkit-scrollbar { width: 5px; height: 5px; }
+        #attachments-container::-webkit-scrollbar-thumb { background: #ff007f; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -104,9 +108,20 @@
                 <p id="modal-task-desc" class="text-white-50 small mb-4" style="line-height: 1.5;">Açıklama yükleniyor...</p>
             </div>
 
+            <h6 class="text-white mb-3 border-left border-info ps-2 section-title" style="font-size: 0.9rem; border-left: 3px solid #ff007f;">Proje Dosyaları</h6>
+            
+            <div class="input-group mb-3">
+                <input type="file" id="task-file-input" class="form-control cool-input" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; font-size: 0.8rem;">
+                <button class="btn btn-info px-3 fw-bold text-white" onclick="dosyaYukle()" style="background: linear-gradient(45deg, #ff007f, #7928ca); border: none; font-size: 0.8rem;">
+                    <i class="fas fa-cloud-upload-alt me-1"></i> Yükle
+                </button>
+            </div>
+            
+            <div id="attachments-container" class="mb-4 d-flex flex-wrap gap-2" style="max-height: 100px; overflow-y: auto;">
+                </div>
             <h6 class="text-white mb-3 border-left border-info ps-2 section-title" style="font-size: 0.9rem; border-left: 3px solid #00d2ff;">Yorumlar ve Notlar</h6>
             
-            <div id="comments-container" class="mb-4 pe-2" style="max-height: 250px; overflow-y: auto;">
+            <div id="comments-container" class="mb-4 pe-2" style="max-height: 200px; overflow-y: auto;">
                 </div>
 
             <form id="addCommentForm" class="mt-auto">
