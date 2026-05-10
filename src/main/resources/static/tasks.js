@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentUser = JSON.parse(storedUser);
     updateUI(currentUser);
     
-    // DİKKAT: Artık sadece userId'yi değil, Admin kontrolü yapabilmek için 
+    // DİKKAT: Artık sadece userId'yi değil, Admin ve Yönetici kontrolü yapabilmek için 
     // currentUser nesnesinin tamamını fonksiyona gönderiyoruz.
     gorevleriDagit(currentUser, token);
 });
@@ -35,7 +35,7 @@ async function gorevleriDagit(user, token) {
         const isAdmin = user.roles && user.roles.some(role => role.name === 'ROLE_ADMIN');
         
         // 2. AKILLI URL: Adminse tüm görevleri getir (/api/tasks), 
-        // Değilse (normal üyeyse) sadece kendisine atananları getir
+        // Değilse (normal üyeyse) kendisine atanan VEYA yönettiği projelerdeki görevleri getir
         const url = isAdmin 
             ? `http://localhost:8080/api/tasks` 
             : `http://localhost:8080/api/tasks/user/${user.id}`;
@@ -49,19 +49,22 @@ async function gorevleriDagit(user, token) {
             const col = columns[task.status] || columns['BEKLEMEDE'];
             const date = task.dueDate ? new Date(task.dueDate).toLocaleDateString('tr-TR') : 'Süresiz';
             
-            // ADMIN İÇİN ÖZEL: Görevin hangi personele ait olduğunu gösteren küçük rozet
-            const assignedUserBadge = (isAdmin && task.assignedTo) 
-                ? `<span class="badge bg-secondary ms-2" style="font-size: 0.65rem;">Personel: ${task.assignedTo.fullName || task.assignedTo.username}</span>` 
-                : '';
+            // --- AKILLI ROZET SİSTEMİ ---
+            // Eğer görev başkasına atanmışsa ama benim panomdaysa (demek ki ben yöneticiyim veya adminim)
+            let assignedUserBadge = '';
+            if (task.assignedTo && task.assignedTo.id !== user.id) {
+                const personName = task.assignedTo.fullName || task.assignedTo.username;
+                assignedUserBadge = `<span class="badge bg-warning text-dark ms-2 fw-bold" style="font-size: 0.65rem;"><i class="fas fa-user-tag me-1"></i> ${personName}</span>`;
+            }
             
             // DİKKAT: Görev kartına tıklanabilirlik özelliği (Modal) eklendi!
             col.innerHTML += `
                 <div class="task-card" onclick="openTaskDetailModal(${task.id})">
-                    <div class="small text-info mb-1">
+                    <div class="small text-info mb-1 d-flex align-items-center">
                         ${task.project ? task.project.name : 'Genel'} 
                         ${assignedUserBadge}
                     </div>
-                    <h6 class="text-white fw-bold mb-2">${task.title}</h6>
+                    <h6 class="text-white fw-bold mb-2 mt-1">${task.title}</h6>
                     <p class="text-muted small mb-3" style="font-size:0.75rem">${task.description || ''}</p>
                     <div class="d-flex justify-content-between align-items-center border-top border-white border-opacity-10 pt-2">
                         <span class="text-white-50" style="font-size:0.7rem"><i class="far fa-calendar me-1"></i> ${date}</span>
@@ -88,7 +91,7 @@ function statusGuncelle(taskId, newStatus) {
     });
 }
 
-// --- YENİ EKLENEN: GÖREV DETAY, DOSYA VE YORUM İŞLEMLERİ ---
+// --- GÖREV DETAY, DOSYA VE YORUM İŞLEMLERİ ---
 
 function openTaskDetailModal(taskId) {
     document.getElementById('taskDetailModal').style.display = 'block';
@@ -160,7 +163,6 @@ function dosyaYukle() {
     });
 }
 
-// --- GÜNCELLENDİ: DOSYALARI GETİRME FONKSİYONU ---
 function dosyalariGetir(taskId, token) {
     const container = document.getElementById('attachments-container');
     container.innerHTML = '<span class="text-muted small"><i class="fas fa-spinner fa-spin me-2"></i>Dosyalar taranıyor...</span>';
@@ -177,7 +179,7 @@ function dosyalariGetir(taskId, token) {
             return;
         }
 
-        // YENİ: Link yerine buton kullanıyoruz ve dosyaIndir fonksiyonunu tetikliyoruz
+        // Buton yapısı ve Güvenli İndirme fonksiyonunu tetikleme
         attachments.forEach(att => {
             container.innerHTML += `
                 <button type="button" onclick="dosyaIndir(${att.id}, '${att.fileName}')" 
@@ -191,7 +193,7 @@ function dosyalariGetir(taskId, token) {
     .catch(err => container.innerHTML = '<span class="text-danger small">Dosyalar çekilemedi.</span>');
 }
 
-// --- YENİ EKLENDİ: GÜVENLİ DOSYA İNDİRME MOTORU ---
+// --- GÜVENLİ DOSYA İNDİRME MOTORU ---
 function dosyaIndir(attachmentId, fileName) {
     const token = localStorage.getItem('jwtToken');
     const container = document.getElementById('attachments-container');

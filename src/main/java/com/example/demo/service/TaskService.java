@@ -18,7 +18,7 @@ public class TaskService {
     @Autowired
     private ActivityLogService logService; // İşlemleri loglamak için
 
-    // YENİ EKLENDİ: Bildirim servisini buraya dahil ediyoruz
+    // Bildirim servisini buraya dahil ediyoruz
     @Autowired
     private NotificationService notificationService;
 
@@ -45,10 +45,24 @@ public class TaskService {
     }
 
     /**
-     * Kullanıcıya atanmış görevleri getirir. Dashboard listesi için kritiktir.
+     * --- YENİ GÜNCELLENDİ: PROJE YÖNETİCİSİ DESTEĞİ ---
+     * Sadece kullanıcıya atanmış görevleri DEĞİL, 
+     * Kullanıcının YÖNETTİĞİ (Manager olduğu) projelere ait diğer personellerin görevlerini de getirir.
      */
     public List<Task> getTasksByUser(Long userId) {
-        return taskRepository.findByAssignedToId(userId);
+        return taskRepository.findAll().stream()
+                .filter(task -> {
+                    // 1. İhtimal: Görev doğrudan bana atanmış (Kendi işim)
+                    boolean banaAtanan = task.getAssignedTo() != null && task.getAssignedTo().getId().equals(userId);
+                    
+                    // 2. İhtimal: Görev başkasında (örn: Esra'da) ama o projenin YÖNETİCİSİ benim!
+                    boolean benimProjem = task.getProject() != null && 
+                                          task.getProject().getManager() != null && 
+                                          task.getProject().getManager().getId().equals(userId);
+                    
+                    return banaAtanan || benimProjem;
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 
     /**
@@ -65,7 +79,7 @@ public class TaskService {
             String logMsg = "Yeni görev atandı: '" + savedTask.getTitle() + "' (Proje: " + savedTask.getProject().getName() + ")";
             logService.logAction(logMsg, savedTask.getAssignedTo());
             
-            // YENİ EKLENDİ: Personele anlık bildirim gönder
+            // Personele anlık bildirim gönder
             notificationService.sendNotification(savedTask.getAssignedTo(), "Yeni bir görev atandı: " + savedTask.getTitle());
         }
         
