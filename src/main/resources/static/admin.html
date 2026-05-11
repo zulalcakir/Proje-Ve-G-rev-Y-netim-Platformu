@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         /* Admin için özel kırmızı/neon teması */
         .blob-1 { background: #ff4b2b; }
@@ -91,7 +93,7 @@
                 </button>
             </div>
 
-            <div class="row mb-5 text-center g-4">
+            <div class="row mb-4 text-center g-4">
                 <div class="col-md-3">
                     <div class="stat-card p-4 rounded-4">
                         <p class="subtitle text-uppercase small m-1">Toplam Kullanıcı</p>
@@ -114,6 +116,25 @@
                     <div class="stat-card p-4 rounded-4">
                         <p class="subtitle text-uppercase small m-1">Sistem Durumu</p>
                         <h2 class="text-success fw-bold m-0"><i class="fas fa-circle-check me-2"></i>AKTİF</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-5 g-4">
+                <div class="col-md-5">
+                    <div class="stat-card p-4 rounded-4 h-100">
+                        <h6 class="text-white mb-4 section-title" style="font-size: 0.8rem;">Genel Görev Dağılımı</h6>
+                        <div style="height: 250px; position: relative;">
+                            <canvas id="projectPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="stat-card p-4 rounded-4 h-100">
+                        <h6 class="text-white mb-4 section-title" style="font-size: 0.8rem;">Sistem Ceza Trendi (Aylık)</h6>
+                        <div style="height: 250px; position: relative;">
+                            <canvas id="penaltyLineChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -293,7 +314,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="text-white-50 small mb-1 ms-1">Etiketler (Çoklu Seçim İçin CTRL/CMD Basılı Tutun)</label>
+                    <label class="text-white-50 small mb-1 ms-1">Etiketler (CTRL tuşu ile çoklu seçim)</label>
                     <select id="task-tags" class="cool-input" multiple style="height: 80px;">
                     </select>
                 </div>

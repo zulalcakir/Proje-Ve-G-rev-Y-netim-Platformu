@@ -1,3 +1,6 @@
+// Grafik nesnelerini globalde tutalım (Tazelerken eskileri yok etmek için)
+let userPieChart, userLineChart;
+
 document.addEventListener('DOMContentLoaded', function() {
     // 1. Tarayıcı hafızasından kullanıcıyı ve token'ı al
     const storedUser = localStorage.getItem('user');
@@ -28,17 +31,82 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Merkezi Veri Yükleme Yöneticisi
 async function verileriYukle(userId, token) {
-    // Tüm yüklemeleri paralel başlatarak hızı artıralım
     await Promise.all([
         istatistikleriGuncelle(userId, token),
         gorevListesiniYukle(userId, token),
         sonLoglariYukle(userId, token),
         cezalariYukle(userId, token),
-        bildirimleriYukle(userId, token) // BİLDİRİMLER BURAYA EKLENDİ
+        bildirimleriYukle(userId, token)
     ]);
 }
 
-// Arayüzdeki isim ve profil kısımlarını doldurur
+// --- GRAFİK MOTORLARI (YENİ) ---
+
+function updateUserPieChart(completed, pending) {
+    const ctx = document.getElementById('userTaskPieChart')?.getContext('2d');
+    if (!ctx) return;
+    if (userPieChart) userPieChart.destroy();
+
+    userPieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Tamamlanan', 'Bekleyen'],
+            datasets: [{
+                data: [completed, pending],
+                backgroundColor: ['#28a745', 'rgba(255, 255, 255, 0.05)'],
+                borderColor: ['#28a745', 'rgba(255, 255, 255, 0.1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: { legend: { position: 'bottom', labels: { color: '#fff', font: { size: 10 } } } }
+        }
+    });
+}
+
+function updateUserLineChart(penalties) {
+    const ctx = document.getElementById('userPenaltyLineChart')?.getContext('2d');
+    if (!ctx || !penalties) return;
+
+    const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+    const monthlyData = new Array(12).fill(0);
+
+    penalties.forEach(p => {
+        const month = new Date(p.penaltyDate).getMonth();
+        monthlyData[month] += p.penaltyScore;
+    });
+
+    if (userLineChart) userLineChart.destroy();
+
+    userLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Ceza Puanım',
+                data: monthlyData,
+                borderColor: '#ff007f',
+                backgroundColor: 'rgba(255, 0, 127, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ff007f'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#fff', stepSize: 1 } },
+                x: { grid: { display: false }, ticks: { color: '#fff' } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// --- VERİ YÜKLEME FONKSİYONLARI ---
+
 function updateUserInterface(user) {
     const welcomeName = document.getElementById('welcome-name');
     const userFullName = document.getElementById('user-full-name');
@@ -57,7 +125,6 @@ function updateUserInterface(user) {
     }
 }
 
-// Merkezi Yanıt Yöneticisi
 function handleResponse(res) {
     if (res.status === 401) {
         localStorage.clear();
@@ -68,7 +135,6 @@ function handleResponse(res) {
     return res.status !== 204 ? res.json() : null;
 }
 
-// 1. İstatistikleri Güncelle
 async function istatistikleriGuncelle(userId, token) {
     try {
         const headers = { 'Authorization': 'Bearer ' + token };
@@ -94,12 +160,15 @@ async function istatistikleriGuncelle(userId, token) {
         
         document.getElementById('gorev-sayisi').innerText = bekleyenler;
         document.getElementById('tamamlanan-sayisi').innerText = tamamlananlar;
+
+        // GRAFİĞİ GÜNCELLE
+        updateUserPieChart(tamamlananlar, bekleyenler);
+
     } catch (err) {
         console.error("İstatistik hatası:", err);
     }
 }
 
-// 2. Ceza Verilerini Yükle
 async function cezalariYukle(userId, token) {
     const penaltyList = document.getElementById('penaltyList');
     const totalScoreElement = document.getElementById('totalPenaltyScore');
@@ -108,19 +177,17 @@ async function cezalariYukle(userId, token) {
     try {
         const headers = { 'Authorization': 'Bearer ' + token };
 
-        // A. Toplam Puanı Çek
         const resTotal = await fetch(`http://localhost:8080/api/penalties/user/${userId}/total`, { headers });
         const totalScore = await handleResponse(resTotal);
         totalScoreElement.innerText = (totalScore !== null && totalScore !== undefined) ? totalScore : 0;
 
-        // B. Ceza Listesini Çek
         const resList = await fetch(`http://localhost:8080/api/penalties/user/${userId}`, { headers });
         const penalties = await handleResponse(resList);
 
-        console.log("Backend'den gelen cezalar:", penalties); 
+        // GRAFİĞİ GÜNCELLE
+        updateUserLineChart(penalties);
 
         penaltyList.innerHTML = '';
-
         if (!penalties || penalties.length === 0) {
             penaltyList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted small">Henüz ceza kaydınız bulunmuyor.</td></tr>';
             return;
@@ -144,7 +211,6 @@ async function cezalariYukle(userId, token) {
     }
 }
 
-// 3. Tabloya Görevleri Yükle
 async function gorevListesiniYukle(userId, token) {
     const taskList = document.getElementById('task-list');
     const noTaskMsg = document.getElementById('no-task-message');
@@ -192,7 +258,6 @@ async function gorevListesiniYukle(userId, token) {
     }
 }
 
-// Durum Güncelleme
 function updateStatus(taskId, newStatus) {
     const token = localStorage.getItem('jwtToken');
     const user = JSON.parse(localStorage.getItem('user'));
@@ -218,7 +283,6 @@ function getStatusBadge(status) {
     }
 }
 
-// 4. Son İşlem Loglarını Yükle
 async function sonLoglariYukle(userId, token) {
     const logBox = document.getElementById('recent-logs');
     if (!logBox) return;
@@ -251,8 +315,6 @@ async function sonLoglariYukle(userId, token) {
     }
 }
 
-// --- YENİ EKLENDİ: BİLDİRİM FONKSİYONLARI ---
-
 async function bildirimleriYukle(userId, token) {
     try {
         const res = await fetch(`http://localhost:8080/api/notifications/user/${userId}`, {
@@ -269,13 +331,11 @@ async function bildirimleriYukle(userId, token) {
             return;
         }
 
-        // Rozeti (Badge) Güncelle
         if (badge) {
             badge.innerText = notifications.length;
             badge.classList.remove('d-none');
         }
 
-        // Listeyi Güncelle
         if (list) {
             list.innerHTML = '';
             notifications.reverse().forEach(n => {
@@ -326,7 +386,6 @@ function markAllNotificationsAsRead() {
 function openNotificationModal() { document.getElementById('notificationModal').style.display = 'block'; }
 function closeNotificationModal() { document.getElementById('notificationModal').style.display = 'none'; }
 
-// Dashboard Modallarını dışarı tıklayınca kapatma
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('notificationModal');
     if (e.target == modal) modal.style.display = "none";

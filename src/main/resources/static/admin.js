@@ -1,3 +1,6 @@
+// Grafik nesnelerini globalde tutalım (Tazelerken eskileri yok etmek için)
+let pieChart, lineChart;
+
 document.addEventListener('DOMContentLoaded', function() {
     // 1. Güvenlik ve Token Kontrolü
     const storedUser = localStorage.getItem('user');
@@ -34,16 +37,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if(adminAddUserForm) {
         adminAddUserForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // YENİ EKLENDİ: Departman verisi formdan alınıyor
             const departmentId = document.getElementById('admin-reg-department').value;
-
             const newUser = {
                 fullName: document.getElementById('admin-reg-name').value,
                 email: document.getElementById('admin-reg-email').value,
                 username: document.getElementById('admin-reg-username').value,
                 password: document.getElementById('admin-reg-password').value,
-                department: departmentId ? { id: parseInt(departmentId) } : null // Departman eklendi
+                department: departmentId ? { id: parseInt(departmentId) } : null
             };
 
             fetch('http://localhost:8080/api/users', {
@@ -96,8 +96,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if(adminAddTaskForm) {
         adminAddTaskForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // YENİ EKLENDİ: Seçilen çoklu etiketleri diziye çevirme
             const selectedTags = Array.from(document.getElementById('task-tags').selectedOptions).map(opt => ({ id: parseInt(opt.value) }));
             const categoryId = document.getElementById('task-category').value;
 
@@ -109,8 +107,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 project: { id: parseInt(document.getElementById('task-project').value) },
                 assignedTo: { id: parseInt(document.getElementById('task-user').value) },
                 priority: { id: parseInt(document.getElementById('task-priority').value) },
-                category: categoryId ? { id: parseInt(categoryId) } : null, // Kategori eklendi
-                tags: selectedTags // Etiketler eklendi
+                category: categoryId ? { id: parseInt(categoryId) } : null,
+                tags: selectedTags
             };
 
             fetch('http://localhost:8080/api/tasks', {
@@ -183,6 +181,71 @@ function verileriTazele(token) {
     cezaSiralamasiniYukle(token); 
 }
 
+// --- GRAFİK MOTORLARI (YENİ) ---
+
+function updatePieChart(completed, total) {
+    const ctx = document.getElementById('projectPieChart')?.getContext('2d');
+    if (!ctx) return;
+    if (pieChart) pieChart.destroy();
+
+    pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Tamamlanan', 'Devam Eden'],
+            datasets: [{
+                data: [completed, Math.max(0, total - completed)],
+                backgroundColor: ['#28a745', 'rgba(255, 255, 255, 0.1)'],
+                borderColor: ['#28a745', 'rgba(255, 255, 255, 0.2)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { position: 'bottom', labels: { color: '#fff', font: { size: 10 } } } }
+        }
+    });
+}
+
+function updateLineChart(penalties) {
+    const ctx = document.getElementById('penaltyLineChart')?.getContext('2d');
+    if (!ctx || !penalties) return;
+
+    const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+    const monthlyData = new Array(12).fill(0);
+
+    penalties.forEach(p => {
+        const month = new Date(p.penaltyDate).getMonth();
+        monthlyData[month] += p.penaltyScore;
+    });
+
+    if (lineChart) lineChart.destroy();
+
+    lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Toplam Ceza Puanı',
+                data: monthlyData,
+                borderColor: '#ff416c',
+                backgroundColor: 'rgba(255, 65, 108, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ff416c'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#fff', stepSize: 1 } },
+                x: { grid: { display: false }, ticks: { color: '#fff' } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
 // --- VERİ YÜKLEME FONKSİYONLARI ---
 
 function istatistikleriYukle(token) {
@@ -193,6 +256,9 @@ function istatistikleriYukle(token) {
             document.getElementById('totalUsers').innerText = data.totalUsers || 0;
             document.getElementById('totalProjects').innerText = data.totalProjects || 0;
             document.getElementById('completedTasks').innerText = data.completedTasks || 0;
+            
+            // GRAFİĞİ GÜNCELLE: Backend'den gelen totalTasks'ı kullanıyoruz
+            updatePieChart(data.completedTasks || 0, data.totalTasks || (data.completedTasks + 5));
         }
     })
     .catch(err => console.warn("İstatistikler yüklenemedi."));
@@ -207,7 +273,7 @@ function kullaniciTablosunuYukle(token) {
         tbody.innerHTML = '';
         users.forEach(user => {
             const roles = user.roles.map(r => `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 small" style="font-size:0.6rem">${r.name}</span>`).join(' ');
-            const deptName = user.department ? user.department.name : 'Atanmamış'; // Departman eklendi
+            const deptName = user.department ? user.department.name : 'Atanmamış';
             
             tbody.innerHTML += `
                 <tr>
@@ -294,6 +360,9 @@ function cezaSiralamasiniYukle(token) {
     fetch('http://localhost:8080/api/penalties', { headers: { 'Authorization': 'Bearer ' + token } })
     .then(handleResponse)
     .then(penalties => {
+        // GRAFİĞİ GÜNCELLE
+        updateLineChart(penalties);
+
         const tbody = document.getElementById('adminPenaltyTable');
         if(!tbody) return;
         tbody.innerHTML = '';
@@ -381,7 +450,7 @@ function loglariYukle(token) {
 
 function openUserModal() { 
     document.getElementById('userModal').style.display = 'block'; 
-    populateDepartments(); // YENİ: Departmanları getir
+    populateDepartments();
 }
 function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
@@ -396,8 +465,8 @@ function openTaskModal() {
     populatePersonelSelect('task-user');
     populateProjectSelect('task-project');
     populatePrioritySelect('task-priority'); 
-    populateCategories(); // YENİ: Kategorileri getir
-    populateTags();       // YENİ: Etiketleri getir
+    populateCategories();
+    populateTags();
 }
 function closeTaskModal() { document.getElementById('taskModal').style.display = 'none'; }
 
@@ -467,7 +536,6 @@ function populatePrioritySelect(elementId) {
     });
 }
 
-// YENİ: Departmanları Select Kutusuna Doldur
 function populateDepartments() {
     const select = document.getElementById('admin-reg-department');
     if(!select) return;
@@ -480,7 +548,6 @@ function populateDepartments() {
     });
 }
 
-// YENİ: Kategorileri Select Kutusuna Doldur
 function populateCategories() {
     const select = document.getElementById('task-category');
     if(!select) return;
@@ -493,7 +560,6 @@ function populateCategories() {
     });
 }
 
-// YENİ: Etiketleri Select Kutusuna Doldur
 function populateTags() {
     const select = document.getElementById('task-tags');
     if(!select) return;
@@ -509,12 +575,8 @@ function populateTags() {
 function dosyalariGetir(taskId, token) {
     const container = document.getElementById('attachments-container');
     if(!container) return; 
-    
     container.innerHTML = '<span class="text-muted small"><i class="fas fa-spinner fa-spin me-2"></i>Dosyalar taranıyor...</span>';
-
-    fetch(`http://localhost:8080/api/attachments/task/${taskId}`, { 
-        headers: { 'Authorization': 'Bearer ' + token } 
-    })
+    fetch(`http://localhost:8080/api/attachments/task/${taskId}`, { headers: { 'Authorization': 'Bearer ' + token } })
     .then(res => res.json())
     .then(attachments => {
         container.innerHTML = '';
@@ -522,7 +584,6 @@ function dosyalariGetir(taskId, token) {
             container.innerHTML = '<span class="text-white-50 small" style="font-size: 0.8rem;">Bu göreve henüz dosya eklenmemiş.</span>';
             return;
         }
-
         attachments.forEach(att => {
             container.innerHTML += `
                 <button onclick="dosyaIndir(${att.id}, '${att.fileName}')" 
@@ -540,33 +601,21 @@ function dosyaIndir(attachmentId, fileName) {
     const token = localStorage.getItem('jwtToken');
     const container = document.getElementById('attachments-container');
     const originalHtml = container.innerHTML;
-    
     container.innerHTML = `<span class="text-info small"><i class="fas fa-spinner fa-spin me-2"></i> ${fileName} indiriliyor...</span>`;
-
-    fetch(`http://localhost:8080/api/attachments/download/${attachmentId}`, {
-        method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + token } 
-    })
+    fetch(`http://localhost:8080/api/attachments/download/${attachmentId}`, { headers: { 'Authorization': 'Bearer ' + token } })
     .then(response => {
-        if (!response.ok) throw new Error("Dosya indirilemedi! Yetkiniz olmayabilir.");
+        if (!response.ok) throw new Error("Dosya indirilemedi!");
         return response.blob(); 
     })
     .then(blob => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = fileName; 
-        document.body.appendChild(a);
-        a.click();
-        
+        a.style.display = 'none'; a.href = url; a.download = fileName; 
+        document.body.appendChild(a); a.click();
         window.URL.revokeObjectURL(url);
         container.innerHTML = originalHtml; 
     })
-    .catch(err => {
-        alert(err.message);
-        container.innerHTML = originalHtml;
-    });
+    .catch(err => { alert(err.message); container.innerHTML = originalHtml; });
 }
 
 function yorumlariYukle(taskId, token) {
