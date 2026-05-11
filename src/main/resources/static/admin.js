@@ -34,11 +34,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if(adminAddUserForm) {
         adminAddUserForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // YENİ EKLENDİ: Departman verisi formdan alınıyor
+            const departmentId = document.getElementById('admin-reg-department').value;
+
             const newUser = {
                 fullName: document.getElementById('admin-reg-name').value,
                 email: document.getElementById('admin-reg-email').value,
                 username: document.getElementById('admin-reg-username').value,
-                password: document.getElementById('admin-reg-password').value
+                password: document.getElementById('admin-reg-password').value,
+                department: departmentId ? { id: parseInt(departmentId) } : null // Departman eklendi
             };
 
             fetch('http://localhost:8080/api/users', {
@@ -92,6 +97,10 @@ document.addEventListener('DOMContentLoaded', function() {
         adminAddTaskForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // YENİ EKLENDİ: Seçilen çoklu etiketleri diziye çevirme
+            const selectedTags = Array.from(document.getElementById('task-tags').selectedOptions).map(opt => ({ id: parseInt(opt.value) }));
+            const categoryId = document.getElementById('task-category').value;
+
             const newTask = {
                 title: document.getElementById('task-title').value,
                 description: document.getElementById('task-desc').value,
@@ -99,7 +108,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 status: 'BEKLEMEDE',
                 project: { id: parseInt(document.getElementById('task-project').value) },
                 assignedTo: { id: parseInt(document.getElementById('task-user').value) },
-                priority: { id: parseInt(document.getElementById('task-priority').value) } 
+                priority: { id: parseInt(document.getElementById('task-priority').value) },
+                category: categoryId ? { id: parseInt(categoryId) } : null, // Kategori eklendi
+                tags: selectedTags // Etiketler eklendi
             };
 
             fetch('http://localhost:8080/api/tasks', {
@@ -196,12 +207,15 @@ function kullaniciTablosunuYukle(token) {
         tbody.innerHTML = '';
         users.forEach(user => {
             const roles = user.roles.map(r => `<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 small" style="font-size:0.6rem">${r.name}</span>`).join(' ');
+            const deptName = user.department ? user.department.name : 'Atanmamış'; // Departman eklendi
+            
             tbody.innerHTML += `
                 <tr>
                     <td class="ps-4 text-muted small">#${user.id}</td>
                     <td class="fw-bold text-white">${user.fullName || '-'}</td>
                     <td class="text-info">@${user.username}</td>
                     <td class="small text-white-50">${user.email}</td>
+                    <td class="text-white small">${deptName}</td>
                     <td>${roles}</td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-outline-danger border-0" onclick="kullaniciSil(${user.id})"><i class="fas fa-trash"></i></button>
@@ -365,7 +379,10 @@ function loglariYukle(token) {
 
 // --- MODALLAR VE YARDIMCI ARAÇLAR ---
 
-function openUserModal() { document.getElementById('userModal').style.display = 'block'; }
+function openUserModal() { 
+    document.getElementById('userModal').style.display = 'block'; 
+    populateDepartments(); // YENİ: Departmanları getir
+}
 function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
 function openProjectModal() { 
@@ -379,6 +396,8 @@ function openTaskModal() {
     populatePersonelSelect('task-user');
     populateProjectSelect('task-project');
     populatePrioritySelect('task-priority'); 
+    populateCategories(); // YENİ: Kategorileri getir
+    populateTags();       // YENİ: Etiketleri getir
 }
 function closeTaskModal() { document.getElementById('taskModal').style.display = 'none'; }
 
@@ -401,7 +420,7 @@ function openTaskDetailModal(taskId) {
 
 function closeTaskDetailModal() { document.getElementById('taskDetailModal').style.display = 'none'; }
 
-// DİNAMİK VERİ DOLDURMA FONKSİYONLARI
+// --- DİNAMİK VERİ DOLDURMA FONKSİYONLARI ---
 
 function populatePersonelSelect(elementId) {
     const select = document.getElementById(elementId);
@@ -448,7 +467,45 @@ function populatePrioritySelect(elementId) {
     });
 }
 
-// --- GÜNCELLENDİ: DOSYALARI GETİRME FONKSİYONU ---
+// YENİ: Departmanları Select Kutusuna Doldur
+function populateDepartments() {
+    const select = document.getElementById('admin-reg-department');
+    if(!select) return;
+    const token = localStorage.getItem('jwtToken');
+    fetch('http://localhost:8080/api/departments', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(handleResponse).then(deps => {
+        if(!deps) return;
+        select.innerHTML = '<option value="">Departman Seçin...</option>';
+        deps.forEach(d => select.innerHTML += `<option value="${d.id}">${d.name}</option>`);
+    });
+}
+
+// YENİ: Kategorileri Select Kutusuna Doldur
+function populateCategories() {
+    const select = document.getElementById('task-category');
+    if(!select) return;
+    const token = localStorage.getItem('jwtToken');
+    fetch('http://localhost:8080/api/categories', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(handleResponse).then(cats => {
+        if(!cats) return;
+        select.innerHTML = '<option value="">Kategori Seçin...</option>';
+        cats.forEach(c => select.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+    });
+}
+
+// YENİ: Etiketleri Select Kutusuna Doldur
+function populateTags() {
+    const select = document.getElementById('task-tags');
+    if(!select) return;
+    const token = localStorage.getItem('jwtToken');
+    fetch('http://localhost:8080/api/tags', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(handleResponse).then(tags => {
+        if(!tags) return;
+        select.innerHTML = '';
+        tags.forEach(t => select.innerHTML += `<option value="${t.id}">${t.name}</option>`);
+    });
+}
+
 function dosyalariGetir(taskId, token) {
     const container = document.getElementById('attachments-container');
     if(!container) return; 
@@ -467,7 +524,6 @@ function dosyalariGetir(taskId, token) {
         }
 
         attachments.forEach(att => {
-            // YENİ: Link yerine buton kullanıyoruz ve dosyaIndir fonksiyonunu tetikliyoruz.
             container.innerHTML += `
                 <button onclick="dosyaIndir(${att.id}, '${att.fileName}')" 
                    class="btn btn-sm btn-outline-info rounded-pill mb-2 me-2" 
@@ -480,7 +536,6 @@ function dosyalariGetir(taskId, token) {
     .catch(err => container.innerHTML = '<span class="text-danger small">Dosyalar çekilemedi.</span>');
 }
 
-// --- YENİ EKLENDİ: GÜVENLİ DOSYA İNDİRME MOTORU ---
 function dosyaIndir(attachmentId, fileName) {
     const token = localStorage.getItem('jwtToken');
     const container = document.getElementById('attachments-container');

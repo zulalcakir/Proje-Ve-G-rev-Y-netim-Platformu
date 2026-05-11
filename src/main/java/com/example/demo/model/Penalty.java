@@ -1,12 +1,10 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "penalties")
-@Data // Getter, Setter, Equals ve ToString'i otomatik halleder
 public class Penalty {
 
     @Id
@@ -18,7 +16,6 @@ public class Penalty {
 
     /**
      * Veritabanındaki 'penalty_amount' kolonu ile eşleşmesi için eklendi.
-     * Scheduler sınıfı bu alanı set etmek isteyecektir.
      */
     @Column(name = "penalty_amount")
     private int penaltyAmount;
@@ -35,9 +32,66 @@ public class Penalty {
 
     /**
      * Cezaya sebep olan görevi bağladık.
-     * JoinColumn isminin veritabanındaki 'task_id' ile birebir uyması için netleştirdik.
      */
     @ManyToOne
     @JoinColumn(name = "task_id")
     private Task task;
+
+    // --- GETTER VE SETTER METOTLARI ---
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public int getPenaltyScore() {
+        return penaltyScore;
+    }
+
+    public void setPenaltyScore(int penaltyScore) {
+        this.penaltyScore = penaltyScore;
+    }
+
+    public int getPenaltyAmount() {
+        return penaltyAmount;
+    }
+
+    public void setPenaltyAmount(int penaltyAmount) {
+        this.penaltyAmount = penaltyAmount;
+    }
+
+    public LocalDateTime getPenaltyDate() {
+        return penaltyDate;
+    }
+
+    public void setPenaltyDate(LocalDateTime penaltyDate) {
+        this.penaltyDate = penaltyDate;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Task getTask() {
+        return task;
+    }
+
+    public void setTask(Task task) {
+        this.task = task;
+    }
 }

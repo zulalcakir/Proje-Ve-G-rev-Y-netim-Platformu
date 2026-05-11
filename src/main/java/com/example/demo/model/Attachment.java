@@ -2,13 +2,9 @@ package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @Entity
 @Table(name = "attachments")
-@Data
 public class Attachment {
 
     @Id
@@ -30,7 +26,47 @@ public class Attachment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     @JsonIgnore // REST API çağrılarında sonsuz JSON döngüsünü engeller
-    @ToString.Exclude // Lombok'un konsola yazdırırken sonsuz döngüye girmesini engeller
-    @EqualsAndHashCode.Exclude // Lombok'un karşılaştırma yaparken çökmesini engeller
     private Task task;
+
+    // --- GETTER VE SETTER METOTLARI ---
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
+    public Task getTask() {
+        return task;
+    }
+
+    public void setTask(Task task) {
+        this.task = task;
+    }
 }

@@ -138,7 +138,7 @@
                             <th>AD SOYAD</th>
                             <th>KULLANICI ADI</th>
                             <th>E-POSTA</th>
-                            <th>ROLLER</th>
+                            <th>DEPARTMAN</th> <th>ROLLER</th>
                             <th class="text-center">EYLEMLER</th>
                         </tr>
                     </thead>
@@ -233,6 +233,13 @@
                 <div class="mb-3">
                     <input type="text" id="admin-reg-username" class="cool-input" placeholder="Kullanıcı Adı" required>
                 </div>
+                
+                <div class="mb-3">
+                    <select id="admin-reg-department" class="cool-input" required>
+                        <option value="">Departman Seçin...</option>
+                    </select>
+                </div>
+
                 <div class="mb-4">
                     <input type="password" id="admin-reg-password" class="cool-input" placeholder="Şifre" required>
                 </div>
@@ -278,6 +285,19 @@
                     <select id="task-project" class="cool-input" required>
                         </select>
                 </div>
+                
+                <div class="mb-3">
+                    <select id="task-category" class="cool-input" required>
+                        <option value="">Kategori Seçin...</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-white-50 small mb-1 ms-1">Etiketler (Çoklu Seçim İçin CTRL/CMD Basılı Tutun)</label>
+                    <select id="task-tags" class="cool-input" multiple style="height: 80px;">
+                    </select>
+                </div>
+
                 <div class="mb-3">
                     <input type="text" id="task-title" class="cool-input" placeholder="Görev Başlığı" required>
                 </div>

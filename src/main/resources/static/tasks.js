@@ -56,14 +56,26 @@ async function gorevleriDagit(user, token) {
                 const personName = task.assignedTo.fullName || task.assignedTo.username;
                 assignedUserBadge = `<span class="badge bg-warning text-dark ms-2 fw-bold" style="font-size: 0.65rem;"><i class="fas fa-user-tag me-1"></i> ${personName}</span>`;
             }
+
+            // --- YENİ EKLENDİ: KATEGORİ VE ETİKET ROZETLERİ ---
+            const categoryBadge = task.category ? `<span class="badge bg-secondary mb-2 me-1" style="font-size: 0.65rem;">${task.category.name}</span>` : '';
+            let tagsHtml = '';
+            if(task.tags && task.tags.length > 0) {
+                task.tags.forEach(tag => {
+                    tagsHtml += `<span class="badge border border-info text-info mb-2 me-1" style="background: rgba(0,210,255,0.1); font-size: 0.65rem;">#${tag.name}</span>`;
+                });
+            }
             
             // DİKKAT: Görev kartına tıklanabilirlik özelliği (Modal) eklendi!
             col.innerHTML += `
                 <div class="task-card" onclick="openTaskDetailModal(${task.id})">
-                    <div class="small text-info mb-1 d-flex align-items-center">
-                        ${task.project ? task.project.name : 'Genel'} 
+                    <div class="small text-info mb-2 d-flex align-items-start justify-content-between">
+                        <span>${task.project ? task.project.name : 'Genel'}</span>
                         ${assignedUserBadge}
                     </div>
+                    
+                    <div>${categoryBadge} ${tagsHtml}</div>
+
                     <h6 class="text-white fw-bold mb-2 mt-1">${task.title}</h6>
                     <p class="text-muted small mb-3" style="font-size:0.75rem">${task.description || ''}</p>
                     <div class="d-flex justify-content-between align-items-center border-top border-white border-opacity-10 pt-2">
