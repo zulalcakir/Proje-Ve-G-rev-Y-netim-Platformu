@@ -24,7 +24,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Controller'larda @PreAuthorize kullanımını aktif eder
+@EnableMethodSecurity // @PreAuthorize kullanımını aktif eder
 public class SecurityConfig {
 
     @Autowired
@@ -33,57 +33,67 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. CORS Yapılandırmasını Aktif Et (Tarayıcı engellerini aşmak için)
+            // 1. CORS Yapılandırması
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // 2. CSRF'i Devre Dışı Bırak (Stateless API için gereklidir)
+            // 2. CSRF Devre Dışı (Stateless API)
             .csrf(csrf -> csrf.disable()) 
             
-            // 3. Oturum Yönetimi: STATELESS (JWT kullandığımız için sunucuda oturum yok)
+            // 3. Oturum Yönetimi: STATELESS
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             .authorizeHttpRequests(auth -> auth
-                // Herkese açık yollar
+                // Herkese açık auth işlemleri
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Kayıt olma
+                .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Kayıt olma herkese açık
                 
-                // KRİTİK GÜNCELLEME: tasks.html ve tasks.js izin listesine eklendi
-                .requestMatchers("/", "/index.html", "/style.css", "/app.js", "/dashboard.html", "/dashboard.js", "/admin.html", "/admin.js", "/projects.html", "/projects.js", "/tasks.html", "/tasks.js").permitAll() 
+                // STATİK DOSYALAR: profile.html ve profile.js eklendi
+                .requestMatchers("/", "/index.html", "/style.css", "/app.js", 
+                                 "/dashboard.html", "/dashboard.js", 
+                                 "/admin.html", "/admin.js", 
+                                 "/projects.html", "/projects.js", 
+                                 "/tasks.html", "/tasks.js",
+                                 "/profile.html", "/profile.js").permitAll() 
+                
                 .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**").permitAll()
                 
-                // API uçları için yetkilendirme
-                .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN") // İstatistikler vb. sadece Admin
-                .requestMatchers("/api/users/**").hasAuthority("ROLE_ADMIN") // Kullanıcı yönetimi sadece Admin
-                .requestMatchers("/api/projects/**", "/api/tasks/**", "/api/logs/**").authenticated() // Diğerleri giriş yapmış olmalı
+                // --- KRİTİK AYAR: PROFİL GÜNCELLEME İZNİ ---
+                // Bu satır, genel /api/users kısıtlamasından önce gelmelidir!
+                .requestMatchers("/api/users/me").authenticated() 
                 
-                // Diğer tüm istekler doğrulanmalı
+                // API uçları için yetkilendirme
+                .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN") 
+                .requestMatchers("/api/users/**").hasAuthority("ROLE_ADMIN") // Diğer kullanıcı işlemleri hala Admin'e kilitli
+                
+                // Görev, Proje, Dosya ve Yorum işlemleri için sadece giriş yapmış olmak yeterli
+                .requestMatchers("/api/projects/**", "/api/tasks/**", "/api/logs/**", 
+                                 "/api/comments/**", "/api/attachments/**", "/api/penalties/**").authenticated() 
+                
                 .anyRequest().authenticated()
             )
             
-            // 4. Yetkisiz girişlerde Pop-up yerine 401 dön
+            // 4. Yetkisiz giriş hatası (401)
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             )
             
-            // 5. H2 Console veya Frame kullanan yapılar için
+            // 5. H2 ve Frame ayarları
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
             
-        // 6. JWT Filtresini standart filtrelerin önüne ekle
+        // 6. JWT Filtresini ekle
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
             
         return http.build();
     }
 
-    // --- KRİTİK: CORS YAPILANDIRMASI ---
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Frontend'in çalıştığı adreslere izin ver (Geliştirme aşamasında hepsi için "*" kullanılabilir)
         configuration.setAllowedOriginPatterns(List.of("*")); 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token"));
         configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true); // Token bazlı işlemlerde true olması önerilir
+        configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -92,7 +92,18 @@ public class UserService {
         });
     }
 
-    // --- YENİ EKLENDİ: ŞİFRE SIFIRLAMA İŞLEMLERİ ---
+    // --- YENİ EKLENDİ: KULLANICI ADINA GÖRE BULMA (Profil Güncelleme İçin) ---
+    /**
+     * Kullanıcı adına (@username) göre kullanıcıyı bulur.
+     */
+    public User findByUsername(String username) {
+        if (username == null || username.isEmpty()) return null;
+        return userRepository.findAll().stream()
+                .filter(u -> username.equals(u.getUsername()))
+                .findFirst().orElse(null);
+    }
+
+    // --- ŞİFRE SIFIRLAMA İŞLEMLERİ ---
 
     /**
      * E-posta ile kullanıcı bulma (Şifre sıfırlama için kullanılır)
