@@ -7,6 +7,35 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Giriş ekranına özel daraltıcı ve ortalayıcı cam kart tasarımı */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+        .login-card {
+            background: rgba(15, 12, 41, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px; /* İŞTE FORMU KÜÇÜLTEN SİHİRLİ KOD BURASI */
+            z-index: 10;
+        }
+        .login-card .cool-input {
+            background: rgba(0,0,0,0.4) !important;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+        }
+    </style>
 </head>
 <body>
     
@@ -14,18 +43,31 @@
     <div class="color-blob blob-2"></div>
     <div class="color-blob blob-3"></div>
 
-    <div class="login-container">
-        
-        <div class="glass-card">
-            <div class="card-header text-center mb-4">
-                <h1 class="cool-title" style="font-size: 2.8rem;">MERHABA</h1>
-                <p class="subtitle">Platforma giriş yap ve projelerini tamamla. 🚀</p>
+    <div class="login-wrapper">
+        <div class="login-card">
+            
+            <div class="card-header text-center mb-4 border-bottom border-white border-opacity-10 pb-4">
+                
+                <div class="d-flex flex-column align-items-center text-center mb-3">
+                    <svg width="60" height="60" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" class="mb-3" style="filter: drop-shadow(0px 5px 15px rgba(0, 210, 255, 0.5));">
+                        <defs>
+                            <linearGradient id="pLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00d2ff" />
+                                <stop offset="100%" stop-color="#7928ca" />
+                            </linearGradient>
+                        </defs>
+                        <rect width="40" height="40" rx="12" fill="url(#pLogoGrad)" />
+                        <path d="M 14 12 L 24 12 C 28 12 28 20 24 20 L 17 20 L 17 28" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h1 class="cool-title" style="font-size: 1.8rem; margin:0;">P-PLATFORM</h1>
+                    <p class="text-white-50 small mt-1 m-0">Sisteme giriş yapın 🚀</p>
+                </div>
                 
                 <div id="auth-message" style="display: none; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 0.85rem; font-weight: 600; text-align: center; border: 1px solid transparent;"></div>
                 
                 <div class="d-flex justify-content-center gap-2 mt-4" id="form-buttons">
                     <button class="btn btn-sm btn-outline-light active" id="btn-user" onclick="switchForm('user')">Üye Girişi</button>
-                    <button class="btn btn-sm btn-outline-light" id="btn-admin" onclick="switchForm('admin')">Yönetici Girişi</button>
+                    <button class="btn btn-sm btn-outline-light" id="btn-admin" onclick="switchForm('admin')">Yönetici</button>
                     <button class="btn btn-sm btn-outline-info" id="btn-register" onclick="switchForm('register')">Kayıt Ol</button>
                 </div>
             </div>
@@ -35,20 +77,20 @@
                     <input type="text" class="cool-input" id="user-username" placeholder="Kullanıcı Adı (@username)" required>
                 </div>
                 <div class="mb-2">
-                    <input type="password" class="cool-input" id="user-password" placeholder="Şifren (Sır gibi saklı)" required>
+                    <input type="password" class="cool-input" id="user-password" placeholder="Şifreniz" required>
                 </div>
                 
                 <div class="text-end mb-3">
-                    <a href="#" onclick="showResetSection()" class="subtitle text-info" style="font-size: 0.75rem; text-decoration: none;">Şifremi Unuttum?</a>
+                    <a href="#" onclick="showResetSection()" class="text-info" style="font-size: 0.75rem; text-decoration: none;">Şifremi Unuttum?</a>
                 </div>
                 
                 <div class="mb-4 form-check d-flex align-items-center gap-2">
                     <input type="checkbox" class="form-check-input mt-0" id="user-remember" style="cursor: pointer;">
-                    <label class="form-check-label subtitle m-0" for="user-remember" style="font-size: 0.8rem; cursor: pointer;"> Beni Hatırla</label>
+                    <label class="form-check-label text-white-50 m-0" for="user-remember" style="font-size: 0.8rem; cursor: pointer;"> Beni Hatırla</label>
                 </div>
 
-                <button type="submit" class="cyber-btn">
-                    <span>SİSTEME GİRİŞ YAP</span>
+                <button type="submit" class="cyber-btn w-100">
+                    SİSTEME GİRİŞ YAP
                 </button>
             </form>
 
@@ -62,11 +104,11 @@
 
                 <div class="mb-4 form-check d-flex align-items-center gap-2">
                     <input type="checkbox" class="form-check-input mt-0" id="admin-remember" style="cursor: pointer;">
-                    <label class="form-check-label subtitle m-0" for="admin-remember" style="font-size: 0.8rem; cursor: pointer;"> Beni Hatırla</label>
+                    <label class="form-check-label text-white-50 m-0" for="admin-remember" style="font-size: 0.8rem; cursor: pointer;"> Beni Hatırla</label>
                 </div>
 
-                <button type="submit" class="cyber-btn" style="background: linear-gradient(45deg, #ff416c, #ff4b2b);">
-                    <span>YÖNETİCİ GİRİŞİ</span>
+                <button type="submit" class="cyber-btn w-100" style="background: linear-gradient(45deg, #ff416c, #ff4b2b);">
+                    YÖNETİCİ GİRİŞİ
                 </button>
             </form>
 
@@ -83,24 +125,24 @@
                 <div class="mb-4">
                     <input type="password" class="cool-input" id="reg-password" placeholder="Güçlü Bir Şifre" required>
                 </div>
-                <button type="submit" class="cyber-btn" style="background: linear-gradient(45deg, #00d2ff, #3a7bd5);">
-                    <span>HESAP OLUŞTUR</span>
+                <button type="submit" class="cyber-btn w-100" style="background: linear-gradient(45deg, #00d2ff, #3a7bd5);">
+                    HESAP OLUŞTUR
                 </button>
             </form>
 
             <div id="resetSection" style="display: none;">
-                <h2 class="cool-title text-center mb-2" style="font-size: 1.5rem;">ŞİFREYİ YENİLE</h2>
-                <p class="subtitle text-center mb-4">Sistem yöneticisinden aldığınız kodu kullanın.</p>
+                <h2 class="cool-title text-center mb-2" style="font-size: 1.2rem;">ŞİFREYİ YENİLE</h2>
+                <p class="text-white-50 text-center mb-4 small">Sistem yöneticisinden aldığınız kodu kullanın.</p>
                 
                 <div id="forgot-step-1">
                     <input type="email" id="reset-email" class="cool-input mb-3" placeholder="Kayıtlı E-posta Adresiniz">
-                    <button onclick="requestResetCode()" class="cyber-btn mb-2">KOD GÖNDER</button>
+                    <button onclick="requestResetCode()" class="cyber-btn w-100 mb-2">KOD GÖNDER</button>
                 </div>
 
                 <div id="forgot-step-2" style="display: none;">
-                    <input type="text" id="reset-token" class="cool-input mb-3" placeholder="Sıfırlama Kodu (Backend Konsoldan Bak)">
-                    <input type="password" id="reset-new-password" class="cool-input mb-3" placeholder="Yeni Güçlü Şifreniz">
-                    <button onclick="performPasswordReset()" class="cyber-btn" style="background: linear-gradient(45deg, #7928ca, #ff007f);">ŞİFREYİ GÜNCELLE</button>
+                    <input type="text" id="reset-token" class="cool-input mb-3" placeholder="Sıfırlama Kodu">
+                    <input type="password" id="reset-new-password" class="cool-input mb-3" placeholder="Yeni Şifreniz">
+                    <button onclick="performPasswordReset()" class="cyber-btn w-100" style="background: linear-gradient(45deg, #7928ca, #ff007f);">ŞİFREYİ GÜNCELLE</button>
                 </div>
                 
                 <button onclick="switchForm('user')" class="btn btn-link text-white-50 w-100 mt-3 small text-decoration-none">← Giriş Ekranına Dön</button>

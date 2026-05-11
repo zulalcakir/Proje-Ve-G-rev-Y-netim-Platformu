@@ -9,22 +9,19 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        .cyber-menu-item { border-radius: 12px; padding: 12px 20px !important; margin-bottom: 5px; color: rgba(255,255,255,0.7) !important; transition: 0.3s; display: flex; align-items: center; }
-        .cyber-menu-item:hover, .cyber-menu-item.active { background: rgba(255, 255, 255, 0.1); color: #fff !important; }
+        /* Sadece projelere özel kart tasarımı */
         .project-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 15px;
-            padding: 20px;
+            background: rgba(0, 0, 0, 0.3) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
             transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
             height: 100%;
         }
-        .project-card:hover { transform: translateY(-5px); border-color: #00d2ff; background: rgba(255, 255, 255, 0.05); }
+        .project-card:hover { transform: translateY(-5px); border-color: #00d2ff; background: rgba(255, 255, 255, 0.05) !important; box-shadow: 0 10px 30px rgba(0,210,255,0.1); }
         .progress-bar-custom { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 15px; }
-        .progress-fill { height: 100%; background: linear-gradient(45deg, #00d2ff, #3a7bd5); transition: width 0.5s ease; }
-        .main-content-scroll::-webkit-scrollbar { display: none; }
-        .main-content-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .progress-fill { height: 100%; background: linear-gradient(45deg, #00d2ff, #7928ca); transition: width 0.5s ease; }
     </style>
 </head>
 <body>
@@ -33,61 +30,65 @@
     <div class="color-blob blob-2"></div>
     <div class="color-blob blob-3"></div>
 
-    <div class="container-fluid p-4 dashboard-layout" style="height: 100vh;">
-        <div class="row h-100 g-4">
+    <div class="app-container">
+        
+        <nav class="app-sidebar">
+            <div class="mb-5 text-white" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><i class="fas fa-layer-group fa-2x"></i></div>
             
-            <div class="col-lg-3 h-100">
-                <div class="glass-card h-100 d-flex flex-column p-4 shadow-lg">
-                    <div class="brand-area mb-5">
-                        <h3 class="cool-title" style="font-size: 1.8rem;">P-PLATFORM</h3>
-                        <p class="subtitle" style="font-size: 0.75rem; letter-spacing: 2px;">MANAGEMENT SUITE</p>
-                    </div>
-                    
-                    <nav class="flex-grow-1">
-                        <ul class="nav flex-column gap-2">
-                            <li class="nav-item"><a class="nav-link cyber-menu-item" href="dashboard.html"><i class="fas fa-home me-2"></i> Ana Panel</a></li>
-                            <li class="nav-item"><a class="nav-link cyber-menu-item active" href="projects.html"><i class="fas fa-project-diagram me-2"></i> Projelerim</a></li>
-                            <li class="nav-item"><a class="nav-link cyber-menu-item" href="#"><i class="fas fa-check-double me-2"></i> Görevlerim</a></li>
-                        </ul>
-                    </nav>
+            <a href="dashboard.html" class="menu-icon" title="Ana Panel"><i class="fas fa-home"></i></a>
+            <a href="projects.html" class="menu-icon active" title="Projelerim"><i class="fas fa-project-diagram"></i></a>
+            <a href="tasks.html" class="menu-icon" title="Görevlerim"><i class="fas fa-tasks"></i></a>
+            
+            <a href="#" class="menu-icon position-relative" onclick="openNotificationModal()" title="Bildirimler">
+                <i class="fas fa-bell"></i>
+                <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" style="width:10px; height:10px;"></span>
+            </a>
+            
+            <a href="#" class="menu-icon mt-auto text-danger" onclick="logout()" title="Çıkış Yap"><i class="fas fa-sign-out-alt"></i></a>
+        </nav>
 
-                    <div class="profile-section mt-auto pt-4 border-top border-white border-opacity-10">
-                        <div class="d-flex align-items-center mb-3">
-                            <div id="user-avatar" class="avatar-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 48px; height: 48px; background: linear-gradient(45deg, #ff007f, #7928ca); border-radius: 50%; font-size: 1.3rem;">?</div>
-                            <div>
-                                <p id="user-full-name" class="m-0 fw-bold text-white" style="font-size: 0.95rem;">Yükleniyor...</p>
-                                <p id="user-role-label" class="m-0 text-white-50" style="font-size: 0.75rem;">Üye</p>
-                            </div>
-                        </div>
-                        <button class="cyber-btn w-100" style="padding: 12px; font-size: 0.85rem;" onclick="logout()">
-                            <span><i class="fas fa-sign-out-alt me-2"></i> GÜVENLİ ÇIKIŞ</span>
-                        </button>
+        <main class="app-main">
+            <header class="page-header mb-5 d-flex justify-content-between align-items-center border-bottom border-white border-opacity-10 pb-4">
+                <div>
+                    <span class="text-muted small">Panel > Projelerim</span>
+                    <h1 class="cool-title">Dahil Olduğum Projeler</h1>
+                    <p class="subtitle opacity-75 m-0">Yönettiğiniz veya görev aldığınız tüm projeler.</p>
+                </div>
+                <div class="d-flex align-items-center gap-3 bg-dark bg-opacity-25 p-2 rounded-pill border border-white border-opacity-10 pe-4">
+                    <div class="profile-avatar" id="user-avatar" style="width: 45px; height: 45px; font-size: 1.1rem; margin: 0;">?</div>
+                    <div class="text-end">
+                        <h6 id="user-full-name" class="m-0 text-white fw-bold" style="font-size: 0.9rem;">Yükleniyor...</h6>
+                        <small id="user-role-label" class="text-info fw-bold" style="font-size: 0.7rem;">Üye</small>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-lg-9 h-100">
-                <div class="glass-card h-100 p-4 main-content-scroll" style="overflow-y: auto;">
-                    
-                    <div class="header-section mb-5 d-flex justify-content-between align-items-end">
-                        <div>
-                            <h2 class="text-white fw-900" style="font-size: 2.2rem;">Dahil Olduğum <span style="color: #00d2ff;">Projeler</span></h2>
-                            <p class="subtitle opacity-75">Yönettiğiniz veya görev aldığınız tüm projeler.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="row g-4" id="projects-container">
-                        <div class="col-12 text-center mt-5">
-                            <p class="text-muted">Projeler yükleniyor...</p>
-                        </div>
-                    </div>
-
+            </header>
+            
+            <div class="row g-4" id="projects-container">
+                <div class="col-12 text-center mt-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-muted mb-3"></i>
+                    <p class="text-muted">Projeler yükleniyor...</p>
                 </div>
             </div>
+        </main>
+    </div>
 
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeNotificationModal()">&times;</span>
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-white border-opacity-10 pb-3">
+                <h3 class="cool-title m-0" style="font-size: 1.5rem;"><i class="fas fa-bell text-warning me-2"></i> Bildirimler</h3>
+            </div>
+            <div id="notification-list" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                <p class="text-muted text-center mt-4 small">Yeni bildiriminiz yok.</p>
+            </div>
         </div>
     </div>
 
     <script src="projects.js"></script>
+    <script>
+        function openNotificationModal() { document.getElementById('notificationModal').style.display = 'block'; }
+        function closeNotificationModal() { document.getElementById('notificationModal').style.display = 'none'; }
+        window.addEventListener('click', (e) => { if (e.target == document.getElementById('notificationModal')) closeNotificationModal(); });
+    </script>
 </body>
 </html>

@@ -8,65 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        /* Dashboard'a özel görsel iyileştirmeler */
-        .stat-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-        .stat-box:hover {
-            background: rgba(255, 255, 255, 0.07);
-            transform: translateY(-5px);
-            border-color: rgba(0, 210, 255, 0.4);
-        }
-        .cyber-menu-item {
-            border-radius: 12px;
-            padding: 12px 20px !important;
-            margin-bottom: 5px;
-            color: rgba(255,255,255,0.7) !important;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-        }
-        .cyber-menu-item:hover, .cyber-menu-item.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff !important;
-        }
-        .section-title {
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            border-left: 4px solid #ff007f;
-            padding-left: 15px;
-            font-weight: 700;
-        }
-        .activity-item {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 12px 0;
-            font-size: 0.85rem;
-        }
-        .task-row:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-        /* Dashboard Scrollbar'ı Gizle */
-        .main-content-scroll::-webkit-scrollbar { display: none; }
-        .main-content-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Ceza puanı için özel renk */
-        .text-penalty { color: #ff007f !important; }
-        .border-penalty { border-color: rgba(255, 0, 127, 0.3) !important; }
-
-        /* Grafik alanı yüksekliği */
-        .chart-container {
-            height: 220px;
-            position: relative;
-        }
-    </style>
 </head>
 <body>
     
@@ -74,201 +16,140 @@
     <div class="color-blob blob-2"></div>
     <div class="color-blob blob-3"></div>
 
-    <div class="container-fluid p-4 dashboard-layout" style="height: 100vh;">
-        <div class="row h-100 g-4">
+    <div class="app-container">
+        
+        <nav class="app-sidebar">
+            <div class="mb-5 text-white" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><i class="fas fa-layer-group fa-2x"></i></div>
             
-            <div class="col-lg-3 h-100">
-                <div class="glass-card h-100 d-flex flex-column p-4 shadow-lg">
-                    <div class="brand-area mb-5">
-                        <h3 class="cool-title" style="font-size: 1.8rem;">P-PLATFORM</h3>
-                        <p class="subtitle" style="font-size: 0.75rem; letter-spacing: 2px;">MANAGEMENT SUITE</p>
-                    </div>
-                    
-                    <nav class="flex-grow-1">
-                        <ul class="nav flex-column gap-2">
-                            <li class="nav-item">
-                                <a class="nav-link cyber-menu-item active" href="dashboard.html">
-                                    <i class="fas fa-home me-2"></i> Ana Panel
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link cyber-menu-item" href="projects.html">
-                                    <i class="fas fa-project-diagram me-2"></i> Projelerim
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link cyber-menu-item" href="tasks.html">
-                                    <i class="fas fa-check-double me-2"></i> Görevlerim
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link cyber-menu-item" href="#" onclick="openNotificationModal()">
-                                    <i class="fas fa-bell me-2"></i> Bildirimler
-                                    <span id="notif-badge" class="badge bg-danger ms-2 d-none">0</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
+            <a href="dashboard.html" class="menu-icon active" title="Dashboard"><i class="fas fa-home"></i></a>
+            <a href="projects.html" class="menu-icon" title="Projeler"><i class="fas fa-project-diagram"></i></a>
+            <a href="tasks.html" class="menu-icon" title="Görevler"><i class="fas fa-tasks"></i></a>
+            
+            <a href="#" class="menu-icon position-relative" onclick="openNotificationModal()" title="Bildirimler">
+                <i class="fas fa-bell"></i>
+                <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" style="width:10px; height:10px;"></span>
+            </a>
+            
+            <a href="#" class="menu-icon mt-auto text-danger" onclick="logout()" title="Çıkış Yap"><i class="fas fa-sign-out-alt"></i></a>
+        </nav>
 
-                    <div class="profile-section mt-auto pt-4 border-top border-white border-opacity-10">
-                        <div class="d-flex align-items-center mb-3">
-                            <div id="user-avatar" class="avatar-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" 
-                                 style="width: 48px; height: 48px; background: linear-gradient(45deg, #ff007f, #7928ca); border-radius: 50%; font-size: 1.3rem; border: 2px solid rgba(255,255,255,0.1);">
-                                ?
-                            </div>
-                            <div>
-                                <p id="user-full-name" class="m-0 fw-bold text-white" style="font-size: 0.95rem;">Yükleniyor...</p>
-                                <p id="user-role-label" class="m-0 text-white-50" style="font-size: 0.75rem;">Üye</p>
-                            </div>
-                        </div>
-                        <button class="cyber-btn w-100" style="padding: 12px; font-size: 0.85rem;" onclick="logout()">
-                            <span><i class="fas fa-sign-out-alt me-2"></i> GÜVENLİ ÇIKIŞ</span>
-                        </button>
+        <main class="app-main">
+            <header class="page-header">
+                <div>
+                    <span class="text-muted small">Panel > Bugün</span>
+                    <h1 class="cool-title">Task Management</h1>
+                </div>
+                <div class="header-links">
+                    <span class="active">Genel Bakış</span>
+                    <span>Projeler</span>
+                    <span>Raporlar</span>
+                </div>
+            </header>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Aktif Projeler</p>
+                        <h2 id="proje-sayisi" class="text-info">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Bekleyen</p>
+                        <h2 id="gorev-sayisi" class="text-warning">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Tamamlanan</p>
+                        <h2 id="tamamlanan-sayisi" class="text-success">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box" style="border-color: rgba(255, 0, 127, 0.3);">
+                        <p class="m-0 text-danger small text-uppercase fw-bold">Ceza Puanı</p>
+                        <h2 id="totalPenaltyScore" class="text-danger">0</h2>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-9 h-100">
-                <div class="glass-card h-100 p-4 main-content-scroll" style="overflow-y: auto;">
-                    
-                    <div class="header-section mb-5">
-                        <h2 class="text-white fw-900" style="font-size: 2.2rem;">
-                            Merhaba, <span id="welcome-name" style="color: #00d2ff;">...</span>! 👋
-                        </h2>
-                        <p class="subtitle opacity-75">İşte projelerindeki son durum ve bekleyen işlerin.</p>
-                    </div>
-                    
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-3">
-                            <div class="stat-box p-4 rounded-4 shadow-sm">
-                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem; font-weight: 700;">Aktif Projeler</p>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <h3 id="proje-sayisi" class="cool-title m-0" style="font-size: 2.2rem;">0</h3>
-                                    <span style="font-size: 1.5rem; opacity: 0.4;"><i class="fas fa-rocket text-info"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-box p-4 rounded-4 shadow-sm">
-                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem; font-weight: 700;">Bekleyen Görevler</p>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <h3 id="gorev-sayisi" class="cool-title m-0" style="font-size: 2.2rem;">0</h3>
-                                    <span style="font-size: 1.5rem; opacity: 0.4;"><i class="fas fa-clock text-warning"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-box p-4 rounded-4 shadow-sm">
-                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem; font-weight: 700;">Tamamlanan</p>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <h3 id="tamamlanan-sayisi" class="cool-title m-0" style="font-size: 2.2rem;">0</h3>
-                                    <span style="font-size: 1.5rem; opacity: 0.4;"><i class="fas fa-trophy text-success"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-box p-4 rounded-4 shadow-sm border-penalty">
-                                <p class="mb-2 subtitle text-uppercase" style="font-size: 0.7rem; font-weight: 700; color: #ff007f;">Ceza Puanı</p>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <h3 id="totalPenaltyScore" class="cool-title m-0" style="font-size: 2.2rem; color: #ff007f;">0</h3>
-                                    <span style="font-size: 1.5rem; opacity: 0.6;"><i class="fas fa-exclamation-triangle text-penalty"></i></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mb-5">
-                        <div class="col-md-5">
-                            <div class="stat-box p-4 rounded-4 shadow-sm h-100">
-                                <h6 class="text-white mb-4 section-title" style="font-size: 0.8rem; border-left-color: #00d2ff;">Görev Performansım</h6>
-                                <div class="chart-container">
-                                    <canvas id="userTaskPieChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-7">
-                            <div class="stat-box p-4 rounded-4 shadow-sm h-100">
-                                <h6 class="text-white mb-4 section-title" style="font-size: 0.8rem; border-left-color: #ff007f;">Aylık Ceza Trendim</h6>
-                                <div class="chart-container">
-                                    <canvas id="userPenaltyLineChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4">
-                        <div class="col-xl-8">
-                            <h4 class="text-white mb-4 section-title">Bana Atanan Görevler</h4>
-                            <div class="stat-box p-4 rounded-4 shadow-sm mb-5" style="min-height: 350px;">
-                                <div class="table-responsive">
-                                    <table class="table table-dark table-borderless align-middle m-0">
-                                        <thead>
-                                            <tr class="text-white-50" style="font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                <th class="pb-3">GÖREV DETAYI</th>
-                                                <th class="pb-3">PROJE</th>
-                                                <th class="pb-3">TESLİM</th>
-                                                <th class="pb-3">DURUM</th>
-                                                <th class="pb-3 text-center">EYLEM</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="task-list" style="font-size: 0.85rem;">
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div id="no-task-message" class="text-center mt-5 d-none">
-                                    <i class="fas fa-mug-hot fa-3x text-muted mb-3 opacity-25"></i>
-                                    <p class="text-muted">Harika! Üzerinde bekleyen bir görev görünmüyor.</p>
-                                </div>
-                            </div>
-
-                            <h4 class="text-white mb-4 section-title">Ceza Geçmişim</h4>
-                            <div class="stat-box p-4 rounded-4 shadow-sm">
-                                <div class="table-responsive">
-                                    <table class="table table-dark table-borderless align-middle m-0">
-                                        <thead>
-                                            <tr class="text-white-50" style="font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                <th class="pb-3">İLGİLİ GÖREV</th>
-                                                <th class="pb-3">SEBEP</th>
-                                                <th class="pb-3">PUAN</th>
-                                                <th class="pb-3">İŞLEM TARİHİ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="penaltyList" style="font-size: 0.85rem;">
-                                            </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-4">
-                            <h4 class="text-white mb-4 section-title">Sistem Hareketleri</h4>
-                            <div class="stat-box p-4 rounded-4 shadow-sm" style="min-height: 450px; max-height: 550px; overflow-y: auto;">
-                                <div id="recent-logs">
-                                    <p class="text-muted text-center mt-5 small">İşlemler taranıyor...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+            <div class="content-card">
+                <h6 class="section-title mt-0">Bana Atanan Görevler</h6>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>GÖREV DETAYI</th>
+                                <th>PROJE</th>
+                                <th>TESLİM</th>
+                                <th>DURUM</th>
+                                <th class="text-center">EYLEM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-list"></tbody>
+                    </table>
+                </div>
+                <div id="no-task-message" class="text-center mt-4 mb-3 d-none">
+                    <i class="fas fa-mug-hot fa-2x text-muted mb-2 opacity-25"></i>
+                    <p class="text-muted small">Harika! Üzerinde bekleyen bir görev görünmüyor.</p>
                 </div>
             </div>
 
-        </div>
+            <div class="content-card mb-5">
+                <h6 class="section-title mt-0">Ceza Geçmişim</h6>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>İLGİLİ GÖREV</th>
+                                <th>SEBEP</th>
+                                <th>PUAN</th>
+                                <th>İŞLEM TARİHİ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="penaltyList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <aside class="app-right-panel">
+            
+            <div class="profile-block">
+                <div class="profile-text">
+                    <h4 id="user-full-name">Yükleniyor...</h4>
+                    <p id="user-role-label">Üye</p>
+                    <span id="welcome-name" class="d-none"></span> </div>
+                <div class="profile-avatar" id="user-avatar">?</div>
+            </div>
+
+            <h6 class="section-title">GÖREV DAĞILIMI</h6>
+            <div style="height: 180px; position: relative; margin-bottom: 30px;">
+                <canvas id="userTaskPieChart"></canvas>
+            </div>
+
+            <h6 class="section-title">AYLIK CEZA TRENDİ</h6>
+            <div style="height: 150px; position: relative; margin-bottom: 30px;">
+                <canvas id="userPenaltyLineChart"></canvas>
+            </div>
+
+            <h6 class="section-title">SİSTEM HAREKETLERİ</h6>
+            <div id="recent-logs">
+                <p class="text-muted small text-center mt-4">İşlemler taranıyor...</p>
+            </div>
+            
+        </aside>
+
     </div>
 
     <div id="notificationModal" class="modal">
-        <div class="glass-card modal-content p-4 position-relative" style="max-width: 500px;">
+        <div class="modal-content">
             <span class="close-btn" onclick="closeNotificationModal()">&times;</span>
-            
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-white border-opacity-10 pb-3">
                 <h3 class="cool-title m-0" style="font-size: 1.5rem;"><i class="fas fa-bell text-warning me-2"></i> Bildirimler</h3>
-                <button class="btn btn-sm btn-outline-info" style="font-size: 0.75rem;" onclick="markAllNotificationsAsRead()">
-                    <i class="fas fa-check-double me-1"></i> Tümünü Oku
-                </button>
             </div>
-            
-            <div id="notification-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                </div>
+            <div id="notification-list" style="max-height: 350px; overflow-y: auto; padding-right: 5px;"></div>
+            <button class="cyber-btn mt-4" onclick="markAllNotificationsAsRead()">TÜMÜNÜ OKUNDU İŞARETLE</button>
         </div>
     </div>
 
