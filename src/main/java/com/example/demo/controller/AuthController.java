@@ -5,7 +5,7 @@ import com.example.demo.model.User;
 import com.example.demo.service.AuthService;
 import com.example.demo.service.LoginAttemptService;
 import com.example.demo.service.UserService; // YENİ EKLENDİ
-import com.example.demo.security.JwtUtil; 
+import com.example.demo.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*") // Frontend erişimi için
+// Sadece bu satır güncellendi: Tarayıcıların gönderdiği OPTIONS (preflight) isteklerine izin verildi.
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.POST, RequestMethod.GET, RequestMethod.OPTIONS})
 public class AuthController {
 
     @Autowired

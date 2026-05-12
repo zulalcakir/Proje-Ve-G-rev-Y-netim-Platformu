@@ -26,7 +26,6 @@ function switchForm(formType) {
     document.getElementById('adminForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
     
-    // Şifre sıfırlama ekranını gizle ve üst butonları geri getir
     const resetSection = document.getElementById('resetSection');
     const formButtons = document.getElementById('form-buttons');
     if(resetSection) resetSection.style.display = 'none';
@@ -48,16 +47,15 @@ function switchForm(formType) {
     }
 }
 
-// --- YENİ EKLENDİ: ŞİFRE SIFIRLAMA (FORGOT PASSWORD) İŞLEMLERİ ---
+// --- ŞİFRE SIFIRLAMA İŞLEMLERİ ---
+const BASE_URL = 'http://p-platform-env.eba-kcxaqihg.eu-west-1.elasticbeanstalk.com';
 
 function showResetSection() {
-    // Tüm formları ve üstteki geçiş butonlarını gizle
     document.getElementById('userForm').style.display = 'none';
     document.getElementById('adminForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('form-buttons').style.display = 'none';
     
-    // Mesaj kutusunu temizle ve Sıfırlama alanını göster
     const msgDiv = document.getElementById('auth-message');
     if (msgDiv) msgDiv.style.display = 'none';
     document.getElementById('resetSection').style.display = 'block';
@@ -70,7 +68,7 @@ function requestResetCode() {
         return;
     }
 
-    fetch('http://localhost:8080/api/auth/forgot-password', {
+    fetch(`${BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email })
@@ -78,7 +76,6 @@ function requestResetCode() {
         const msg = await res.text();
         if(res.ok) {
             showAuthMessage(msg, false);
-            // Başarılıysa 1. adımı gizle, 2. adımı (kod ve yeni şifre girme alanı) göster
             document.getElementById('forgot-step-1').style.display = 'none';
             document.getElementById('forgot-step-2').style.display = 'block';
         } else {
@@ -96,7 +93,7 @@ function performPasswordReset() {
         return;
     }
 
-    fetch('http://localhost:8080/api/auth/reset-password', {
+    fetch(`${BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: token, newPassword: newPassword })
@@ -104,8 +101,6 @@ function performPasswordReset() {
         const msg = await res.text();
         if(res.ok) {
             showAuthMessage("Şifreniz başarıyla güncellendi! Yönlendiriliyorsunuz...", false);
-            
-            // 2 saniye sonra giriş ekranına geri dön ve formları temizle
             setTimeout(() => {
                 document.getElementById('forgot-step-1').style.display = 'block';
                 document.getElementById('forgot-step-2').style.display = 'none';
@@ -120,10 +115,9 @@ function performPasswordReset() {
     }).catch(err => showAuthMessage("Bağlantı hatası oluştu.", true));
 }
 
-
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- 3. ÜYE GİRİŞİ (BENİ HATIRLA EKLENDİ) ---
+    // --- 3. ÜYE GİRİŞİ ---
     const userForm = document.getElementById('userForm');
     if(userForm) {
         userForm.addEventListener('submit', function(e) {
@@ -132,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const passwordInput = document.getElementById('user-password').value;
             const rememberMeInput = document.getElementById('user-remember').checked;
 
-            fetch('http://localhost:8080/api/auth/login', {
+            fetch(`${BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -159,14 +153,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 localStorage.setItem('user', JSON.stringify(user));
                 localStorage.setItem('jwtToken', token);
-                
                 window.location.href = 'dashboard.html'; 
             })
             .catch(error => showAuthMessage(error.message, true));
         });
     }
 
-    // --- 4. ADMIN GİRİŞİ (BENİ HATIRLA EKLENDİ) ---
+    // --- 4. ADMIN GİRİŞİ ---
     const adminForm = document.getElementById('adminForm');
     if(adminForm) {
         adminForm.addEventListener('submit', function(e) {
@@ -175,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const passwordInput = document.getElementById('admin-password').value;
             const rememberMeInput = document.getElementById('admin-remember').checked;
 
-            fetch('http://localhost:8080/api/auth/login', {
+            fetch(`${BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -220,14 +213,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 password: document.getElementById('reg-password').value
             };
 
-            fetch('http://localhost:8080/api/users', {
+            fetch(`${BASE_URL}/api/users`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(user)
             })
             .then(async response => {
                 if(response.ok) return response.json();
-                
                 const errorData = await response.text();
                 throw new Error(errorData || "Kayıt sırasında bir hata oluştu!");
             })
