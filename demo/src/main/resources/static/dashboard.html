@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ana Panel | P-PLATFORM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    
+    <div class="color-blob blob-1"></div>
+    <div class="color-blob blob-2"></div>
+    <div class="color-blob blob-3"></div>
+
+    <div class="app-container">
+        
+        <nav class="app-sidebar">
+            
+            <div class="brand-area mb-5 d-flex flex-column align-items-center text-center mt-2">
+                <svg width="45" height="45" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 5px 10px rgba(0, 210, 255, 0.5)); cursor: pointer;" onclick="location.href='dashboard.html'">
+                    <defs>
+                        <linearGradient id="pLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00d2ff" />
+                            <stop offset="100%" stop-color="#7928ca" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="40" height="40" rx="12" fill="url(#pLogoGrad)" />
+                    <path d="M 14 12 L 24 12 C 28 12 28 20 24 20 L 17 20 L 17 28" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            
+            <a href="dashboard.html" class="menu-icon active" title="Dashboard"><i class="fas fa-home"></i></a>
+            <a href="projects.html" class="menu-icon" title="Projelerim"><i class="fas fa-project-diagram"></i></a>
+            <a href="tasks.html" class="menu-icon" title="Görevlerim"><i class="fas fa-tasks"></i></a>
+            
+            <a href="profile.html" class="menu-icon" title="Profil Ayarları">
+                <i class="fas fa-user-cog"></i>
+            </a>
+            
+            <a href="#" class="menu-icon position-relative" onclick="openNotificationModal()" title="Bildirimler">
+                <i class="fas fa-bell"></i>
+                <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" style="width:10px; height:10px;"></span>
+            </a>
+            
+            <a href="#" class="menu-icon mt-auto text-danger" onclick="logout()" title="Çıkış Yap">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </nav>
+
+        <main class="app-main">
+            <header class="page-header">
+                <div>
+                    <span class="text-muted small">Panel > Bugün</span>
+                    <h1 class="cool-title">SİSTEM <span class="text-info">ÖZETİ</span></h1>
+                </div>
+                <div class="header-links">
+                    <span class="active">Genel Bakış</span>
+                    <span onclick="location.href='projects.html'" style="cursor:pointer">Projeler</span>
+                    <span onclick="location.href='tasks.html'" style="cursor:pointer">Görevler</span>
+                </div>
+            </header>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Aktif Projeler</p>
+                        <h2 id="proje-sayisi" class="text-info">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Bekleyen Görev</p>
+                        <h2 id="gorev-sayisi" class="text-warning">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Tamamlanan</p>
+                        <h2 id="tamamlanan-sayisi" class="text-success">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box" style="border-color: rgba(255, 0, 127, 0.3);">
+                        <p class="m-0 text-danger small text-uppercase fw-bold">Ceza Puanı</p>
+                        <h2 id="totalPenaltyScore" class="text-danger">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h6 class="section-title mt-0">Bana Atanan Görevler</h6>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>GÖREV DETAYI</th>
+                                <th>PROJE</th>
+                                <th>TESLİM</th>
+                                <th>DURUM</th>
+                                <th class="text-center">EYLEM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-list"></tbody>
+                    </table>
+                </div>
+                <div id="no-task-message" class="text-center mt-4 mb-3 d-none">
+                    <i class="fas fa-mug-hot fa-2x text-muted mb-2 opacity-25"></i>
+                    <p class="text-muted small">Harika! Üzerinde bekleyen bir görev görünmüyor.</p>
+                </div>
+            </div>
+
+            <div class="content-card mb-5">
+                <h6 class="section-title mt-0 text-danger" style="border-left-color: #ff007f;">Ceza Geçmişim</h6>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>İLGİLİ GÖREV</th>
+                                <th>SEBEP</th>
+                                <th>PUAN</th>
+                                <th>İŞLEM TARİHİ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="penaltyList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <aside class="app-right-panel">
+            
+            <div class="profile-block" onclick="location.href='profile.html'" style="cursor: pointer; transition: 0.3s;" title="Profil Ayarlarına Git">
+                <div class="profile-text">
+                    <h4 id="user-full-name">Yükleniyor...</h4>
+                    <p id="user-role-label">Üye</p>
+                    <span id="welcome-name" class="d-none"></span> 
+                </div>
+                <div class="profile-avatar" id="user-avatar" style="background: linear-gradient(45deg, #00d2ff, #7928ca); box-shadow: 0 0 15px rgba(0,210,255,0.3);">?</div>
+            </div>
+
+            <h6 class="section-title">GÖREV DAĞILIMI</h6>
+            <div style="height: 180px; position: relative; margin-bottom: 30px;">
+                <canvas id="userTaskPieChart"></canvas>
+            </div>
+
+            <h6 class="section-title">AYLIK CEZA TRENDİ</h6>
+            <div style="height: 150px; position: relative; margin-bottom: 30px;">
+                <canvas id="userPenaltyLineChart"></canvas>
+            </div>
+
+            <h6 class="section-title">SİSTEM HAREKETLERİ</h6>
+            <div id="recent-logs">
+                <p class="text-muted small text-center mt-4">İşlemler taranıyor...</p>
+            </div>
+            
+        </aside>
+
+    </div>
+
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeNotificationModal()">&times;</span>
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-white border-opacity-10 pb-3">
+                <h3 class="cool-title m-0" style="font-size: 1.5rem;"><i class="fas fa-bell text-warning me-2"></i> Bildirimler</h3>
+            </div>
+            <div id="notification-list" style="max-height: 350px; overflow-y: auto; padding-right: 5px;"></div>
+            <button class="cyber-btn mt-4" onclick="markAllNotificationsAsRead()">TÜMÜNÜ OKUNDU İŞARETLE</button>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

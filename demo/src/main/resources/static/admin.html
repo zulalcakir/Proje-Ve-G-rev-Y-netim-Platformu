@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Yönetimi | P-PLATFORM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    
+    <div class="color-blob blob-1"></div>
+    <div class="color-blob blob-2"></div>
+    <div class="color-blob blob-3"></div>
+
+    <div class="app-container">
+        
+        <nav class="app-sidebar">
+            <div class="mb-5 text-white" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><i class="fas fa-shield-alt fa-2x"></i></div>
+            
+            <a href="admin.html" class="menu-icon active" title="Genel Durum"><i class="fas fa-chart-pie"></i></a>
+            <a href="#" class="menu-icon" onclick="openUserModal()" title="Yeni Kullanıcı"><i class="fas fa-user-plus"></i></a>
+            <a href="#" class="menu-icon" onclick="openProjectModal()" title="Yeni Proje"><i class="fas fa-folder-plus"></i></a>
+            <a href="#" class="menu-icon" onclick="openTaskModal()" title="Görev Ata"><i class="fas fa-tasks"></i></a>
+            
+            <a href="#" class="menu-icon mt-auto text-danger" onclick="logout()" title="Çıkış Yap"><i class="fas fa-sign-out-alt"></i></a>
+        </nav>
+
+        <main class="app-main">
+            <header class="page-header">
+                <div>
+                    <span class="text-muted small">Admin > Kontrol Paneli</span>
+                    <h1 class="cool-title">Sistem Yönetimi</h1>
+                </div>
+                <div class="header-links">
+                    <span class="active">Kullanıcılar</span>
+                    <span>Projeler</span>
+                    <span>Cezalar</span>
+                </div>
+            </header>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Toplam Kullanıcı</p>
+                        <h2 id="totalUsers" class="text-info">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Aktif Projeler</p>
+                        <h2 id="totalProjects" class="text-warning">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Biten Görevler</p>
+                        <h2 id="completedTasks" class="text-success">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <p class="m-0 text-muted small text-uppercase fw-bold">Sistem Durumu</p>
+                        <h2 class="text-success"><i class="fas fa-check-circle"></i></h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h6 class="section-title mt-0 d-flex justify-content-between align-items-center">
+                    Sistemdeki Kullanıcılar 
+                    <button class="btn btn-sm btn-outline-info p-0 px-2" onclick="openUserModal()">+ Ekle</button>
+                </h6>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>AD SOYAD</th>
+                                <th>KULLANICI ADI</th>
+                                <th>E-POSTA</th>
+                                <th>DEPARTMAN</th> 
+                                <th>ROLLER</th>
+                                <th class="text-center">EYLEMLER</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUserTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="content-card h-100">
+                        <h6 class="section-title mt-0 d-flex justify-content-between align-items-center">
+                            Aktif Projeler 
+                            <button class="btn btn-sm btn-outline-warning p-0 px-2" onclick="openProjectModal()">+ Başlat</button>
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>PROJE ADI</th>
+                                        <th>SORUMLU</th>
+                                        <th>HEDEF BİTİŞ</th>
+                                        <th class="text-center">EYLEMLER</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminProjectTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="content-card h-100">
+                        <h6 class="section-title mt-0 d-flex justify-content-between align-items-center">
+                            Tüm Görevler 
+                            <button class="btn btn-sm btn-outline-success p-0 px-2" onclick="openTaskModal()">+ Ata</button>
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>GÖREV</th>
+                                        <th>PERSONEL</th>
+                                        <th>DURUM</th>
+                                        <th class="text-center">DETAY</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTaskTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card mb-5">
+                <h6 class="section-title mt-0 text-danger" style="border-left-color: #ff007f;">Personel Ceza Sıralaması</h6>
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>SIRA</th>
+                                <th>PERSONEL</th>
+                                <th>TOPLAM CEZA</th>
+                                <th>SON İHLAL (GÖREV / PROJE)</th>
+                                <th>GECİKME SEBEBİ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminPenaltyTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <aside class="app-right-panel">
+            
+            <div class="profile-block">
+                <div class="profile-text">
+                    <h4>Yönetici</h4>
+                    <p>Tam Yetki</p>
+                </div>
+                <div class="profile-avatar"><i class="fas fa-user-shield"></i></div>
+            </div>
+
+            <h6 class="section-title">PROJE DAĞILIMI</h6>
+            <div style="height: 180px; position: relative; margin-bottom: 30px;">
+                <canvas id="projectPieChart"></canvas>
+            </div>
+
+            <h6 class="section-title">SİSTEM CEZA TRENDİ</h6>
+            <div style="height: 150px; position: relative; margin-bottom: 30px;">
+                <canvas id="penaltyLineChart"></canvas>
+            </div>
+
+            <h6 class="section-title">SİSTEM İŞLEM GÜNLÜĞÜ</h6>
+            <div id="systemLogs">
+                <div class="text-success small">[SİSTEM]: Veri bağlantısı doğrulanıyor...</div>
+            </div>
+            
+        </aside>
+
+    </div>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeUserModal()">&times;</span>
+            <h2 class="cool-title" style="font-size: 2rem; margin-bottom: 10px;">Yeni Kullanıcı</h2>
+            <p class="subtitle mb-4">Sisteme yeni bir personel tanımlayın.</p>
+            <form id="adminAddUserForm">
+                <input type="text" id="admin-reg-name" class="cool-input" placeholder="Ad Soyad" required>
+                <input type="email" id="admin-reg-email" class="cool-input" placeholder="E-posta" required>
+                <input type="text" id="admin-reg-username" class="cool-input" placeholder="Kullanıcı Adı" required>
+                <select id="admin-reg-department" class="cool-input" required><option value="">Departman Seçin...</option></select>
+                <input type="password" id="admin-reg-password" class="cool-input mb-4" placeholder="Şifre" required>
+                <button type="submit" class="cyber-btn w-100">KULLANICIYI KAYDET</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeProjectModal()">&times;</span>
+            <h2 class="cool-title" style="font-size: 2rem; margin-bottom: 10px; color: #00d2ff;">Yeni Proje</h2>
+            <p class="subtitle mb-4">Yeni bir çalışma alanı ve hedef bitiş belirleyin.</p>
+            <form id="adminAddProjectForm">
+                <input type="text" id="proj-name" class="cool-input" placeholder="Proje Adı" required>
+                <textarea id="proj-desc" class="cool-input" placeholder="Proje Detayları ve Hedefler" rows="3"></textarea>
+                <label class="text-white-50 small mb-1 ms-1">Bitiş Tarihi Hedefi</label>
+                <input type="datetime-local" id="proj-deadline" class="cool-input" required>
+                <label class="text-white-50 small mb-1 ms-1">Proje Sorumlusu (Manager)</label>
+                <select id="proj-manager" class="cool-input mb-4" required></select>
+                <button type="submit" class="cyber-btn w-100">PROJEYİ BAŞLAT</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="taskModal" class="modal">
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <span class="close-btn" onclick="closeTaskModal()">&times;</span>
+            <h2 class="cool-title" style="font-size: 2rem; margin-bottom: 10px; color: #ff007f;">Görev Atama</h2>
+            <p class="subtitle mb-4">Personelinize yeni bir sorumluluk yükleyin.</p>
+            <form id="adminAddTaskForm">
+                <label class="text-white-50 small mb-1 ms-1">İlgili Proje</label>
+                <select id="task-project" class="cool-input" required></select>
+                
+                <select id="task-category" class="cool-input" required><option value="">Kategori Seçin...</option></select>
+                
+                <label class="text-white-50 small mb-1 ms-1">Etiketler (CTRL tuşu ile çoklu seçim)</label>
+                <select id="task-tags" class="cool-input" multiple style="height: 80px;"></select>
+                
+                <input type="text" id="task-title" class="cool-input" placeholder="Görev Başlığı" required>
+                <textarea id="task-desc" class="cool-input" placeholder="Görev Detayları..." rows="2"></textarea>
+                
+                <label class="text-white-50 small mb-1 ms-1">Son Teslim Tarihi</label>
+                <input type="datetime-local" id="task-deadline" class="cool-input" required>
+                
+                <label class="text-white-50 small mb-1 ms-1">Görev Önceliği</label>
+                <select id="task-priority" class="cool-input" required></select>
+                
+                <label class="text-white-50 small mb-1 ms-1">Görevlendirilecek Personel</label>
+                <select id="task-user" class="cool-input mb-4" required></select>
+                
+                <button type="submit" class="cyber-btn w-100" style="background: linear-gradient(45deg, #7928ca, #ff007f);">GÖREVİ GÖNDER</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="taskDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeTaskDetailModal()">&times;</span>
+            <div class="mb-3">
+                <span id="modal-task-project" class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 mb-2">Proje</span>
+                <h3 id="modal-task-title" class="cool-title mb-2 text-white" style="font-size: 1.5rem;">Görev</h3>
+                <p id="modal-task-desc" class="text-white-50 small mb-4">Açıklama...</p>
+            </div>
+
+            <h6 class="text-white mb-3 border-left border-info ps-2 section-title" style="font-size: 0.9rem; border-left: 3px solid #ff007f;">Proje Dosyaları</h6>
+            <div id="attachments-container" class="mb-4 d-flex flex-wrap gap-2" style="max-height: 100px; overflow-y: auto;"></div>
+            
+            <h6 class="text-white mb-3 border-left border-info ps-2 section-title" style="border-left: 3px solid #ff416c;">Yorumlar ve Notlar</h6>
+            <div id="comments-container" class="mb-4 pe-2" style="max-height: 250px; overflow-y: auto;"></div>
+            
+            <form id="addCommentForm" class="mt-auto">
+                <input type="hidden" id="comment-task-id">
+                <div class="input-group">
+                    <input type="text" id="new-comment-text" class="form-control cool-input m-0" placeholder="Yönetici notu ekleyin..." required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color:white;">
+                    <button type="submit" class="btn btn-danger px-4 fw-bold text-white" style="border-radius: 0 12px 12px 0;">GÖNDER</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
